@@ -1,2 +1,2 @@
-# mass-insight-atrium
+# Atrium
 An event-management platform for Mass Insight
