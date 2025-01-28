@@ -12,6 +12,10 @@
 
 - [Tailwind CSS](https://mui.com/material-ui/integrations/interoperability/#tailwind-css)
 
+## MUI Theming
+
+- [MUI Theme](https://mui.com/material-ui/customization/theming/)
+
 ## Supabase examples
 
 - [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
