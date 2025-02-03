@@ -5,9 +5,10 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export const signInAction = async (formData: {email: string, password: string}) => {
-  const email = formData.email as string;
-  const password = formData.password as string;
+export const signInAction = async (_: null, formData: FormData) => {
+  console.log("reached")
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -15,9 +16,9 @@ export const signInAction = async (formData: {email: string, password: string}) 
   });
 
   if (error) {
-    return encodedRedirect("error", "/sign-in", error.message);
+    return encodedRedirect("error", "/login", error.message.replaceAll(' ', '-'));
   }
-  return redirect("/protected");
+  redirect("/protected");
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
@@ -94,5 +95,5 @@ export const resetPasswordAction = async (formData: FormData) => {
 export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return redirect("/sign-in");
+  return redirect("/login");
 };
