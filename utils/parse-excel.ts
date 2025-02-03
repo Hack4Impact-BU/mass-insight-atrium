@@ -53,9 +53,10 @@ const parseExcel = async (fileBuffer: Buffer): Promise<RowData[]> => {
       if (typeof cell.value === "object" && cell.value !== null) {
         // Handle objects like hyperlinks
         if ("hyperlink" in cell.value) {
-          value = cell.value.hyperlink.split(":")[1]; // Use the hyperlink itself
+          value = cell.value.hyperlink.split(":")[1]; // Use the link itself
         } else {
-          value = "N/A"; // Default to empty string for unknown object types
+          // Default to empty string for unknown object types, could give error instead
+          value = "N/A"; 
         }
       } else {
         // Handle simple strings, numbers, or booleans

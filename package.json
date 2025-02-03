@@ -16,15 +16,18 @@
     "autoprefixer": "10.4.20",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
     "lucide-react": "^0.468.0",
     "next": "latest",
     "next-themes": "^0.4.3",
     "prettier": "^3.3.3",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@types/node": "22.10.2",
+    "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "19.0.2",
     "postcss": "8.4.49",
@@ -32,5 +35,19 @@
     "tailwindcss": "3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.7.2"
-  }
+  },
+  "name": "mass-insight-atrium",
+  "version": "1.0.0",
+  "description": "Added packages for parse-excel script",
+  "main": "postcss.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hack4Impact-BU/mass-insight-atrium.git"
+  },
+  "author": "Simon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hack4Impact-BU/mass-insight-atrium/issues"
+  },
+  "homepage": "https://github.com/Hack4Impact-BU/mass-insight-atrium#readme"
 }
