@@ -1,12 +1,21 @@
 'use client';
-import { createTheme } from '@mui/material/styles';
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
 // nextjs font optimization with material ui
-const theme = createTheme({
+const theme = responsiveFontSizes(createTheme({
     typography: {
-        fontFamily: 'var(--font-roboto)',
+        // This is currently not controlling the app font. Font is being set in layout.tsx
+        fontFamily: 'Inter, sans-serif',
     },
     cssVariables: true,
-})
+    palette: {
+        primary: {
+            main: '#006EB6',
+            contrastText: '#fff',
+            dark: '#022C4D',
+            light: '#F0F9FF',
+        },
+    }
+}));
 
 export default theme;
