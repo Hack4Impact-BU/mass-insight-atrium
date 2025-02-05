@@ -1,4 +1,4 @@
-import { Roboto } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
@@ -14,11 +14,11 @@ export const metadata = {
   description: "MassInsight Event Management Platform",
 };
 
-const roboto = Roboto({
+const inter = Inter({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-roboto",
+  variable: "--font-inter",
 });
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`bg-background text-foreground ${roboto.variable}`}>
+      <body className={`bg-background text-foreground ${inter.className}`}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <main className="min-h-screen flex flex-col items-center">
