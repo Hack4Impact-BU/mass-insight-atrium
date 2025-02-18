@@ -4,6 +4,7 @@ interface ButtonProps {
     label: string;
     onClick?: () => void;
     diffStyle?: boolean;
+    disabled?: boolean;
 }
 
 interface ButtonGroupProps {
@@ -16,12 +17,15 @@ export default function Buttons({ buttons }: ButtonGroupProps) {
         {buttons.map((button, index) => (
         <button
             key={index}
-            onClick={button.onClick || (() => {})}
+            onClick={!button.disabled ? button.onClick : undefined}
             className={`w-32 h-14 ml-2 ${
             button.diffStyle
                     ? "bg-[#fff] text-[#000]"
-                    : "bg-[#006EB6] text-[#fff]"
+                    : button.disabled
+                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                        : "bg-[#006EB6] text-[#fff]"
         }`}
+            disabled={button.disabled}
         >
         {button.label}
         </button>

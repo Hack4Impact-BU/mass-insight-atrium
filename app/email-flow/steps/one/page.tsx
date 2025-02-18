@@ -9,6 +9,7 @@ import Sheet from "@/components/svg/Sheet"
 
 const Page: React.FC = () => {
   const [dataEntryType, setDataEntryType] = useState<string>("");
+  const [spreadsheetUpload, setSpreadsheetUpload] = useState<File | null>(null);
   const router = useRouter();
 
   type DivType = "dataEntry" | "spreadsheet";
@@ -52,7 +53,12 @@ return (
           <div className={`w-64 h-56 border m-6 cursor-pointer ${ 
             dataEntryType === "spreadsheet" ? "border-[3px] border-[#022C4D]" : "border-[#000]"}`} 
             onClick={() => handleClick("spreadsheet")} >
-            <div className="flex justify-center mt-10 h-24 items-center">
+              <input
+              type="file"
+              onChange={(e) => setSpreadsheetUpload(e.target.files?.[0] || null)}
+              style={{ display: "none" }}
+              id="logoInput" />
+            <div className="flex justify-center mt-10 h-24 items-center" onClick={() => document.getElementById("logoInput")?.click()}>
               <Sheet/>
             </div>
             <p className="mt-6 text-sm font-medium">Import new spreadsheet</p>
@@ -71,8 +77,8 @@ return (
       <Buttons
         buttons={[
           { label: "Cancel", diffStyle: true, onClick: () => {} },
-          { label: "Previous", onClick: () => {}  },
-          { label: "Next Page", onClick: handleNextPageDataSend }
+          { label: "Previous", onClick: () => {}, disabled: true  },
+          { label: "Next Page", onClick: handleNextPageDataSend, disabled: !(dataEntryType.length != 0)  }
         ]}
       />
     </div>

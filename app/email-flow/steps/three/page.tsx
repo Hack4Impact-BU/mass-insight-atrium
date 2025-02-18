@@ -2,8 +2,7 @@
 import React from "react";
 import { useState } from "react";
 import Header from "../../components/progress-header";
-import CheckIcon from '@mui/icons-material/Check';
-import ToggleButton from '@mui/material/ToggleButton';
+import Checkbox from '@mui/material/Checkbox';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Accordion from '@mui/material/Accordion';
@@ -31,6 +30,7 @@ const Page: React.FC = () => {
     });
     const [modal, setModal] = useState(false);
     const sampleData = ["rtiska@bu.edu", "tsmith@bu.edu", "kgold@bu.edu", "chris@bu.edu"];
+    const [dataCheck, setDataCheck] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -82,17 +82,11 @@ return (
 
         <div className="flex justify-center mt-10">
             <div className="border border-[#006EB6] p-4 pb-2.5 pt-2.5 flex justify-center items-center">
-                <ToggleButton className="w-8 h-8" value="check" selected={customFeilds} onChange={() => setCustomFeilds((prevSelected) => !prevSelected)}>
-                    <CheckIcon />
-                </ToggleButton>
-                <p className="text-sm ml-4">Include replies to custom fields in email confirmation</p>
+                <Checkbox className="w-8 h-8" value="check" checked={customFeilds} onChange={() => setCustomFeilds((prevSelected) => !prevSelected)}/>                <p className="text-sm ml-4">Include replies to custom fields in email confirmation</p>
             </div>
 
             <div className="border border-[#006EB6] p-4 pb-2.5 pt-2.5 flex justify-center items-center ml-16">
-                <ToggleButton className="w-8 h-8" value="check" selected={confirmationCode} onChange={() => setconfirmationCode((prevSelected) => !prevSelected)}>
-                    <CheckIcon />
-                </ToggleButton>
-                <p className="text-sm ml-4">Include a confirmation code</p>
+                <Checkbox className="w-8 h-8" value="check" checked={confirmationCode} onChange={() => setconfirmationCode((prevSelected) => !prevSelected)}/>                <p className="text-sm ml-4">Include a confirmation code</p>
             </div>
         </div>
 
@@ -203,7 +197,7 @@ return (
         buttons={[
         { label: "Cancel", diffStyle: true, onClick: () => {} },
         { label: "Previous", onClick: () => {router.push('/email-flow/steps/two');}  },
-        { label: "Next Page", onClick: handleNextPageDataSend }
+        { label: "Next Page", onClick: handleNextPageDataSend, disabled: false }
         ]}/>
     </div>
     );

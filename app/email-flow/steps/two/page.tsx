@@ -2,8 +2,7 @@
 import React from "react";
 import { useState } from "react";
 import Header from "../../components/progress-header";
-import CheckIcon from '@mui/icons-material/Check';
-import ToggleButton from '@mui/material/ToggleButton';
+import Checkbox from '@mui/material/Checkbox';
 import { useSearchParams, useRouter } from "next/navigation";
 import Buttons from "../../components/nav-buttons";
 
@@ -11,6 +10,7 @@ import Buttons from "../../components/nav-buttons";
 const Page: React.FC = () => {
     const sampleData = ["first_name", "last_name", "id (Student ID)", "email"] // for testing/UI testing
     const [selectedItems, setSelectedItems] = useState<boolean[]>(new Array(sampleData.length).fill(false));
+    const [dataCheck, setDataCheck] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const router = useRouter();
     const data = searchParams.get("data"); // data taken in from first page "one"
@@ -19,6 +19,11 @@ const Page: React.FC = () => {
         setSelectedItems((prev) => {
         const newSelected = [...prev];
             newSelected[index] = !newSelected[index];
+            for(let i = 0; i < (selectedItems.length); i++){
+                if(selectedItems[i] == true){
+                    setDataCheck(true)
+                }
+            }
             return newSelected;
         });
         //selected items in array of "true/false" values of data to be sent to next page
@@ -40,10 +45,7 @@ return (
         <div className="grid grid-cols-4 gap-4 mt-10">
             {sampleData.map((item, index) => (
                     <div key={index} className="p-4 pb-2.5 pt-2.5 border border-[#006EB6] cursor-pointer flex justify-center items-center">
-                        <ToggleButton className="w-8 h-8" value="check" selected={selectedItems[index]} onChange={() => handleToggle(index)} >
-                            <CheckIcon/>
-                        </ToggleButton>
-                        <p className="w-36 ml-4">{item}</p>
+                        <Checkbox className="w-8 h-8" value="check" checked={selectedItems[index]} onChange={() => handleToggle(index)} />                        <p className="w-36 ml-4">{item}</p>
                     </div>
             ))}
         </div>
@@ -52,7 +54,7 @@ return (
             buttons={[
             { label: "Cancel", diffStyle: true, onClick: () => {} },
             { label: "Previous", onClick: () => {router.push('/email-flow/steps/one');}  },
-            { label: "Next Page", onClick: handleNextPageDataSend }
+            { label: "Next Page", onClick: handleNextPageDataSend, disabled: !dataCheck }
             ]}
         />
     </div>
