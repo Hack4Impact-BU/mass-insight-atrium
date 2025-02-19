@@ -1,5 +1,5 @@
 "use client";
-import { signInAction } from "@/app/actions";
+import { signInAction } from "@/app/(auth-pages)/actions";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
   Button,
@@ -9,11 +9,11 @@ import {
   Link,
 } from "@mui/material";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useActionState, useState } from "react";
+import { useActionState, useState } from "react";
 export default function Login() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   // https://react.dev/reference/react/useActionState
-  const [_, formAction, pending] = useActionState(signInAction, null);
+  const [, formAction, pending] = useActionState(signInAction, null);
   // for the error message, since it's going to be in the url (supabase login functionality is a server action)
   const searchParams = useSearchParams();
 

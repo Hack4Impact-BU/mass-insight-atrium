@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className={`bg-background text-foreground ${inter.className}`}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            <main className="min-h-screen flex flex-col items-center">
+            <main className="min-h-screen max-h-screen min-w-full max-w-full">
               {children}
             </main>
           </ThemeProvider>
