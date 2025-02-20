@@ -1,8 +1,8 @@
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import { useEventFormContext } from "../event-form-provider";
+import { useMeetingFormContext } from "../meeting-form-provider";
 
 export default function TimezoneSelect() {
-  const { formData, updateFields } = useEventFormContext();
+  const { formData, updateFields } = useMeetingFormContext();
   return (
     <FormControl>
       <InputLabel id="timezone-label">Time Zone</InputLabel>

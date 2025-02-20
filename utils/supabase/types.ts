@@ -51,28 +51,31 @@ export type Database = {
       }
       invitees: {
         Row: {
-          first_name: string | null
-          id: number
-          is_moderator: boolean | null
+          email_address: string
+          first_name: string
+          invitee_id: number
+          is_moderator: boolean
           last_name: string | null
           meeting_id: number
-          status: string | null
+          status: Database["public"]["Enums"]["attendee_status"]
         }
         Insert: {
-          first_name?: string | null
-          id?: number
-          is_moderator?: boolean | null
+          email_address: string
+          first_name: string
+          invitee_id?: number
+          is_moderator?: boolean
           last_name?: string | null
           meeting_id: number
-          status?: string | null
+          status?: Database["public"]["Enums"]["attendee_status"]
         }
         Update: {
-          first_name?: string | null
-          id?: number
-          is_moderator?: boolean | null
+          email_address?: string
+          first_name?: string
+          invitee_id?: number
+          is_moderator?: boolean
           last_name?: string | null
           meeting_id?: number
-          status?: string | null
+          status?: Database["public"]["Enums"]["attendee_status"]
         }
         Relationships: [
           {
@@ -80,7 +83,7 @@ export type Database = {
             columns: ["meeting_id"]
             isOneToOne: false
             referencedRelation: "meetings"
-            referencedColumns: ["id"]
+            referencedColumns: ["meeting_id"]
           },
         ]
       }
@@ -88,41 +91,41 @@ export type Database = {
         Row: {
           cap: number | null
           description: string | null
-          end_time: string | null
-          id: number
-          link: string | null
-          location: string | null
-          location_info: string | null
-          name: string | null
-          passcode: string | null
-          start_time: string | null
-          waitlist: boolean | null
+          encrypted_passcode: string | null
+          end_time: string
+          location_type: Database["public"]["Enums"]["location_type"] | null
+          meeting_address: string | null
+          meeting_id: number
+          meeting_link: string | null
+          name: string
+          start_time: string
+          waitlist: boolean
         }
         Insert: {
           cap?: number | null
           description?: string | null
-          end_time?: string | null
-          id?: number
-          link?: string | null
-          location?: string | null
-          location_info?: string | null
-          name?: string | null
-          passcode?: string | null
-          start_time?: string | null
-          waitlist?: boolean | null
+          encrypted_passcode?: string | null
+          end_time: string
+          location_type?: Database["public"]["Enums"]["location_type"] | null
+          meeting_address?: string | null
+          meeting_id?: number
+          meeting_link?: string | null
+          name: string
+          start_time: string
+          waitlist?: boolean
         }
         Update: {
           cap?: number | null
           description?: string | null
-          end_time?: string | null
-          id?: number
-          link?: string | null
-          location?: string | null
-          location_info?: string | null
-          name?: string | null
-          passcode?: string | null
-          start_time?: string | null
-          waitlist?: boolean | null
+          encrypted_passcode?: string | null
+          end_time?: string
+          location_type?: Database["public"]["Enums"]["location_type"] | null
+          meeting_address?: string | null
+          meeting_id?: number
+          meeting_link?: string | null
+          name?: string
+          start_time?: string
+          waitlist?: boolean
         }
         Relationships: []
       }
@@ -214,7 +217,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      attendee_status: "CONFIRMED" | "DECLINED" | "INVITED" | "PARTICIPATED"
+      location_type: "ONLINE" | "INPERSON" | "BOTH"
     }
     CompositeTypes: {
       [_ in never]: never

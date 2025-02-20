@@ -1,14 +1,15 @@
 "use client";
 import { usePathname } from "next/navigation";
 import path from "path";
-import { steps } from "../layout";
+import { steps } from "../../utils";
 import { Step, StepLabel, Stepper } from "@mui/material";
 import { ReactNode } from "react";
 export default function Steps() {
-  const pathname = usePathname();
-  const currentPath = path.basename(pathname);
+  const currentPathname = usePathname();
   return (
-    <Stepper activeStep={steps.findIndex((step) => step.route === currentPath)}>
+    <Stepper
+      activeStep={steps.findIndex((step) => step.route === currentPathname)}
+    >
       {steps.map((label) => {
         const stepProps: { completed?: boolean } = {};
         const labelProps: { optional?: ReactNode } = {};

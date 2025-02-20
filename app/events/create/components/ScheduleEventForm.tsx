@@ -1,7 +1,7 @@
 "use client";
 
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { useEventFormContext } from "../event-form-provider";
+import { useMeetingFormContext } from "../meeting-form-provider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useActionState } from "react";
 import { scheduleFormAction } from "../../actions";
@@ -12,6 +12,8 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
+  List,
+  ListItem,
   Radio,
   RadioGroup,
   TextField,
@@ -22,10 +24,17 @@ import dayjs from "dayjs";
 
 export default function ScheduleEventForm() {
   const router = useRouter();
-  const { formData, updateFields, next, prev } = useEventFormContext();
+  const { formData, updateFields, next, prev } = useMeetingFormContext();
   const [, formAction, isPending] = useActionState(() => {
     scheduleFormAction(formData);
   }, null);
+  const parsableInt = (s: string) => {
+    const number = parseInt(s);
+    if (Number.isNaN(number)) {
+      return false;
+    }
+    return true;
+  };
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <form action={formAction} className="mt-5">
@@ -34,40 +43,45 @@ export default function ScheduleEventForm() {
           <TextField
             required
             label="Event Name"
+            name="event-name"
+            id="event-name"
             variant="filled"
             placeholder="Type a descriptive name for your event here"
-            value={formData.name}
-            onChange={(e) => updateFields({ name: e.currentTarget.value })}
+            value={formData.meetingName}
+            onChange={(e) =>
+              updateFields({ meetingName: e.currentTarget.value })
+            }
           />
           <div className="flex gap-5 justify-center">
             <DateTimePicker
               label="Start Date"
-              defaultValue={dayjs()}
-              onChange={(e) => updateFields({ startDate: e?.valueOf() })}
+              name="start-date"
+              value={dayjs(formData.startDate)}
+              onChange={(e) => updateFields({ startDate: e?.toISOString() })}
             ></DateTimePicker>
             <DateTimePicker
               label="End Date"
-              defaultValue={dayjs()}
-              onChange={(e) => updateFields({ endDate: e?.valueOf() })}
+              value={dayjs(formData.endDate)}
+              onChange={(e) => updateFields({ endDate: e?.toISOString() })}
             ></DateTimePicker>
             <TimezoneSelect />
           </div>
 
           <hr className="border-2"></hr>
           <h3 className="text-xl text-center">Event Details</h3>
-          <div className="flex justify-center gap-5">
+          <div className="flex justify-center items-center gap-5">
             <FormControl>
               <FormLabel>Location</FormLabel>
               <RadioGroup
                 id="location"
                 row
-                value={formData.location}
+                value={formData.locationType}
                 onChange={(e) => {
                   updateFields({
-                    location: e.currentTarget.value as "online" | "in-person",
-                  });
-                  updateFields({
-                    locationInfo: "",
+                    locationType: e.currentTarget.value as
+                      | "online"
+                      | "inperson"
+                      | "both",
                   });
                 }}
               >
@@ -77,29 +91,45 @@ export default function ScheduleEventForm() {
                   control={<Radio></Radio>}
                 ></FormControlLabel>
                 <FormControlLabel
-                  value="in-person"
+                  value="inperson"
                   label="In-person"
+                  control={<Radio></Radio>}
+                ></FormControlLabel>
+                <FormControlLabel
+                  value="both"
+                  label="Both"
                   control={<Radio></Radio>}
                 ></FormControlLabel>
               </RadioGroup>
             </FormControl>
-            <TextField
-              sx={{ width: 2 / 5 }}
-              required
-              label={
-                formData.location == "online" ? "Event Link" : "Event Address"
-              }
-              variant="filled"
-              placeholder={
-                formData.location == "online"
-                  ? "Link to the event"
-                  : "Address to the event"
-              }
-              value={formData.locationInfo}
-              onChange={(e) =>
-                updateFields({ locationInfo: e.currentTarget.value })
-              }
-            />
+            <div className="flex flex-col gap-5">
+              {(formData.locationType == "online" ||
+                formData.locationType == "both") && (
+                <TextField
+                  required
+                  label="Event Link"
+                  variant="filled"
+                  placeholder={"Link to the event"}
+                  value={formData.meetingLink}
+                  onChange={(e) =>
+                    updateFields({ meetingLink: e.currentTarget.value })
+                  }
+                />
+              )}
+              {(formData.locationType == "inperson" ||
+                formData.locationType == "both") && (
+                <TextField
+                  required
+                  label="Event Address"
+                  variant="filled"
+                  placeholder={"Address to the event"}
+                  value={formData.meetingAddress}
+                  onChange={(e) =>
+                    updateFields({ meetingAddress: e.currentTarget.value })
+                  }
+                />
+              )}
+            </div>
           </div>
           <div className="flex justify-center">
             <TextField
@@ -118,13 +148,36 @@ export default function ScheduleEventForm() {
               placeholder="Type a descriptive description of your event here"
             ></TextField>
           </div>
-
+          <div>
+            <h3 className="text-center">Invitees</h3>
+            <div className="flex justify-center">
+              <List
+                sx={{
+                  width: "100%",
+                  maxWidth: 400,
+                  maxHeight: 400,
+                  overflow: "auto",
+                }}
+              >
+                {formData.attendees.map((value, index) => (
+                  <ListItem key={index}>
+                    {value.firstName} {value.lastName} : {value.emailAddress}
+                  </ListItem>
+                ))}
+              </List>
+            </div>
+          </div>
           <div>
             <h3 className="text-center">Moderators</h3>
             <div className="flex justify-center">
               <Button
                 onClick={() => {
-                  updateFields({ moderators: [...formData.moderators, ""] });
+                  updateFields({
+                    moderators: [
+                      ...formData.moderators,
+                      { firstName: "", lastName: "", emailAddress: "" },
+                    ],
+                  });
                 }}
               >
                 Add
@@ -146,24 +199,55 @@ export default function ScheduleEventForm() {
             </div>
             <div className="flex justify-center gap-5 flex-wrap">
               {formData.moderators.map((moderator, index) => (
-                <TextField
-                  label={`Moderator ${index + 1}`}
-                  key={index}
-                  required
-                  value={moderator}
-                  onChange={(e) => {
-                    const newState = [...formData.moderators];
-                    newState[index] = e.currentTarget.value;
-                    updateFields({ moderators: newState });
-                  }}
-                  name="event-name"
-                  id="event-name"
-                  variant="outlined"
-                  placeholder="Name of moderator"
-                ></TextField>
+                <div key={index} className="flex flex-col gap-2">
+                  <TextField
+                    label={`Moderator ${index + 1} first name`}
+                    required
+                    value={moderator.firstName}
+                    onChange={(e) => {
+                      const newState = [...formData.moderators];
+                      newState[index]["firstName"] = e.currentTarget.value;
+                      updateFields({ moderators: newState });
+                    }}
+                    name={`moderator-${index + 1}-first-name`}
+                    id={`moderator-${index + 1}-first-name`}
+                    variant="outlined"
+                    placeholder="First name of moderator"
+                  ></TextField>
+                  <TextField
+                    label={`Moderator ${index + 1} last name`}
+                    required
+                    value={moderator.lastName}
+                    onChange={(e) => {
+                      const newState = [...formData.moderators];
+                      newState[index]["lastName"] = e.currentTarget.value;
+                      updateFields({ moderators: newState });
+                    }}
+                    name={`moderator-${index + 1}-last-name`}
+                    id={`moderator-${index + 1}-last-name`}
+                    variant="outlined"
+                    placeholder="Last Name of moderator"
+                  ></TextField>
+                  <TextField
+                    label={`Moderator ${index + 1} email`}
+                    required
+                    type="email"
+                    value={moderator.emailAddress}
+                    onChange={(e) => {
+                      const newState = [...formData.moderators];
+                      newState[index]["emailAddress"] = e.currentTarget.value;
+                      updateFields({ moderators: newState });
+                    }}
+                    name={`moderator-${index + 1}-email`}
+                    id={`moderator-${index + 1}-email`}
+                    variant="outlined"
+                    placeholder="Name of moderator"
+                  ></TextField>
+                </div>
               ))}
             </div>
           </div>
+
           <hr className="border-2"></hr>
           <h2 className="text-lg text-center">Security</h2>
           <div className="flex flex-col items-end">
@@ -192,7 +276,9 @@ export default function ScheduleEventForm() {
                     if (e.currentTarget.value == "") {
                       updateFields({ cap: "" });
                     } else {
-                      updateFields({ cap: parseInt(e.currentTarget.value) });
+                      if (parsableInt(e.currentTarget.value)) {
+                        updateFields({ cap: parseInt(e.currentTarget.value) });
+                      }
                     }
                   }
                 }}
@@ -212,6 +298,7 @@ export default function ScheduleEventForm() {
 
         <br></br>
         <div className="flex justify-between px-5">
+          {/* // again, can't exactly have 2 submit buttons because they both perform different actions and you can't pass in functions into formAction */}
           <Button
             type="button"
             variant="contained"

@@ -1,20 +1,15 @@
 import { ReactNode, Suspense } from "react";
-import { EventFormContextProvider } from "./event-form-provider";
+import { MeetingFormContextProvider } from "./meeting-form-provider";
 import Steps from "./components/StepperWrapper";
 
-export const steps = [
-  { name: "Event Name", route: "start" },
-  { name: "Event Description", route: "description" },
-  { name: "Import Invitees", route: "import" },
-  { name: "Schedule Event", route: "schedule" },
-];
 export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <Suspense>
       <div className="px-10">
         <Steps></Steps>
-        {/* shouldn't cause a performance issue since only the forms consume this state, and the forms are only in CreateEvent  */}
-        <EventFormContextProvider>{children}</EventFormContextProvider>
+        {/* shouldn't cause a performance issue since only the forms consume this state, and "children" should only be the forms */}
+        {/* if performance DOES become an issue, then one can just set local state to each of the forms and set their initial values to the context values */}
+        <MeetingFormContextProvider>{children}</MeetingFormContextProvider>
       </div>
     </Suspense>
   );

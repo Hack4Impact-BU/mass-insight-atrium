@@ -11,10 +11,16 @@ const theme = responsiveFontSizes(createTheme({
     palette: {
         primary: {
             main: '#006EB6',
-            contrastText: '#fff',
-            dark: '#022C4D',
+            contrastText: '#FFFFFF',
+            dark: '#D9D9D9',
             light: '#F0F9FF',
         },
+        secondary: {
+            main: '#7A6BC4',
+            contrastText: '#FFED00',
+            dark: '#05A500',
+            light: '#F36001',
+        }
     }
 }));
 

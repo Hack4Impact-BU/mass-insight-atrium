@@ -1,3 +1,5 @@
+import ImportForm from "../components/ImportForm";
+
 export default async function Page() {
-    return <></>
+    return <ImportForm />
 }
