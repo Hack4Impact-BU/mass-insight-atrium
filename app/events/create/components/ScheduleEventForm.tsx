@@ -1,10 +1,7 @@
 "use client";
 
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { useMeetingFormContext } from "../meeting-form-provider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useActionState } from "react";
-import { scheduleFormAction } from "../../actions";
 import {
   Button,
   Checkbox,
@@ -19,15 +16,44 @@ import {
   TextField,
 } from "@mui/material";
 import TimezoneSelect from "./TimezoneSelect";
-import { useRouter } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/lib/store";
+import {
+  addMod,
+  removeMod,
+  updateFields,
+  updateModeratorFields,
+} from "@/lib/features/eventCreateForm/eventCreateFormSlice";
+import { useActionState, useEffect } from "react";
+import { scheduleFormAction } from "../../actions";
+import { steps } from "../../utils";
+import { useProgressContext } from "../RedirectManager";
 
 export default function ScheduleEventForm() {
   const router = useRouter();
-  const { formData, updateFields, next, prev } = useMeetingFormContext();
-  const [, formAction, isPending] = useActionState(() => {
-    scheduleFormAction(formData);
-  }, null);
+  const formData = useSelector((state: RootState) => state.eventCreateForm);
+  const dispatch = useDispatch();
+
+  const [, formAction, isPending] = useActionState(
+    (_: void | null, data: FormData) => {
+      dispatch(
+        updateFields({
+          meetingName: data.get("meeting-name") as string,
+          startDate: new Date(data.get("start-date") as string).toISOString(),
+          endDate: new Date(data.get("end-date") as string).toISOString(),
+          locationType: data.get("location") as "online" | "inperson" | "both",
+          meetingAddress: data.get("meeting-address") as string,
+          meetingLink: data.get("meeting-link") as string,
+          description: data.get("description") as string,
+          meetingDetails: data.get("meeting-details") as string,
+        })
+      );
+      scheduleFormAction(formData);
+    },
+    null
+  );
   const parsableInt = (s: string) => {
     const number = parseInt(s);
     if (Number.isNaN(number)) {
@@ -35,9 +61,16 @@ export default function ScheduleEventForm() {
     }
     return true;
   };
+  const pathname = usePathname();
+  const { pageNum } = useProgressContext();
+  useEffect(() => {
+    if (steps[pageNum].route != pathname) {
+      redirect(steps[pageNum].route);
+    }
+  }, [pageNum, pathname]);
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <form action={formAction} className="mt-5">
+      <form className="mt-5" action={formAction}>
         <h1 className="text-center text-3xl mb-5">Schedule your event</h1>
         <div className="flex flex-col gap-5">
           <TextField
@@ -47,22 +80,17 @@ export default function ScheduleEventForm() {
             id="event-name"
             variant="filled"
             placeholder="Type a descriptive name for your event here"
-            value={formData.meetingName}
-            onChange={(e) =>
-              updateFields({ meetingName: e.currentTarget.value })
-            }
+            defaultValue={formData.meetingName}
           />
           <div className="flex gap-5 justify-center">
             <DateTimePicker
               label="Start Date"
               name="start-date"
-              value={dayjs(formData.startDate)}
-              onChange={(e) => updateFields({ startDate: e?.toISOString() })}
+              defaultValue={dayjs(formData.startDate)}
             ></DateTimePicker>
             <DateTimePicker
               label="End Date"
-              value={dayjs(formData.endDate)}
-              onChange={(e) => updateFields({ endDate: e?.toISOString() })}
+              defaultValue={dayjs(formData.endDate)}
             ></DateTimePicker>
             <TimezoneSelect />
           </div>
@@ -74,16 +102,9 @@ export default function ScheduleEventForm() {
               <FormLabel>Location</FormLabel>
               <RadioGroup
                 id="location"
+                name="location"
                 row
-                value={formData.locationType}
-                onChange={(e) => {
-                  updateFields({
-                    locationType: e.currentTarget.value as
-                      | "online"
-                      | "inperson"
-                      | "both",
-                  });
-                }}
+                defaultValue={formData.locationType}
               >
                 <FormControlLabel
                   value="online"
@@ -108,12 +129,11 @@ export default function ScheduleEventForm() {
                 <TextField
                   required
                   label="Event Link"
+                  name="meeting-link"
+                  id="meeting-link"
                   variant="filled"
                   placeholder={"Link to the event"}
-                  value={formData.meetingLink}
-                  onChange={(e) =>
-                    updateFields({ meetingLink: e.currentTarget.value })
-                  }
+                  defaultValue={formData.meetingLink}
                 />
               )}
               {(formData.locationType == "inperson" ||
@@ -122,28 +142,36 @@ export default function ScheduleEventForm() {
                   required
                   label="Event Address"
                   variant="filled"
+                  id="meeting-address"
+                  name="meeting-address"
                   placeholder={"Address to the event"}
-                  value={formData.meetingAddress}
-                  onChange={(e) =>
-                    updateFields({ meetingAddress: e.currentTarget.value })
-                  }
+                  defaultValue={formData.meetingAddress}
                 />
               )}
             </div>
           </div>
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-3">
             <TextField
               sx={{ width: 1 / 2 }}
               label="Description"
               multiline
               minRows={5}
               required
-              value={formData.description}
-              onChange={(e) =>
-                updateFields({ description: e.currentTarget.value })
-              }
-              name="event-name"
-              id="event-name"
+              defaultValue={formData.description}
+              name="description"
+              id="description"
+              variant="outlined"
+              placeholder="Type a descriptive description of your event here"
+            ></TextField>
+            <TextField
+              sx={{ width: 1 / 2 }}
+              label="Meeting Details"
+              multiline
+              minRows={5}
+              required
+              defaultValue={formData.meetingDetails}
+              name="meeting-details"
+              id="meeting-details"
               variant="outlined"
               placeholder="Type a descriptive description of your event here"
             ></TextField>
@@ -172,25 +200,16 @@ export default function ScheduleEventForm() {
             <div className="flex justify-center">
               <Button
                 onClick={() => {
-                  updateFields({
-                    moderators: [
-                      ...formData.moderators,
-                      { firstName: "", lastName: "", emailAddress: "" },
-                    ],
-                  });
+                  dispatch(addMod());
                 }}
               >
                 Add
               </Button>
               <Button
                 onClick={() => {
+                  console.log(formData.moderators.length);
                   if (formData.moderators.length > 1) {
-                    updateFields({
-                      moderators: formData.moderators.slice(
-                        0,
-                        formData.moderators.length - 1
-                      ),
-                    });
+                    dispatch(removeMod());
                   }
                 }}
               >
@@ -204,13 +223,17 @@ export default function ScheduleEventForm() {
                     label={`Moderator ${index + 1} first name`}
                     required
                     value={moderator.firstName}
-                    onChange={(e) => {
-                      const newState = [...formData.moderators];
-                      newState[index]["firstName"] = e.currentTarget.value;
-                      updateFields({ moderators: newState });
-                    }}
-                    name={`moderator-${index + 1}-first-name`}
-                    id={`moderator-${index + 1}-first-name`}
+                    onChange={(e) =>
+                      dispatch(
+                        updateModeratorFields({
+                          field: "firstName",
+                          value: e.currentTarget.value,
+                          index: index,
+                        })
+                      )
+                    }
+                    name={`moderator[${index}][first_name]`}
+                    id={`moderator[${index}][first_name]`}
                     variant="outlined"
                     placeholder="First name of moderator"
                   ></TextField>
@@ -218,13 +241,17 @@ export default function ScheduleEventForm() {
                     label={`Moderator ${index + 1} last name`}
                     required
                     value={moderator.lastName}
-                    onChange={(e) => {
-                      const newState = [...formData.moderators];
-                      newState[index]["lastName"] = e.currentTarget.value;
-                      updateFields({ moderators: newState });
-                    }}
-                    name={`moderator-${index + 1}-last-name`}
-                    id={`moderator-${index + 1}-last-name`}
+                    onChange={(e) =>
+                      dispatch(
+                        updateModeratorFields({
+                          field: "lastName",
+                          value: e.currentTarget.value,
+                          index: index,
+                        })
+                      )
+                    }
+                    name={`moderator[${index}][last_name]`}
+                    id={`moderator[${index}][last_name]`}
                     variant="outlined"
                     placeholder="Last Name of moderator"
                   ></TextField>
@@ -233,15 +260,19 @@ export default function ScheduleEventForm() {
                     required
                     type="email"
                     value={moderator.emailAddress}
-                    onChange={(e) => {
-                      const newState = [...formData.moderators];
-                      newState[index]["emailAddress"] = e.currentTarget.value;
-                      updateFields({ moderators: newState });
-                    }}
-                    name={`moderator-${index + 1}-email`}
-                    id={`moderator-${index + 1}-email`}
+                    onChange={(e) =>
+                      dispatch(
+                        updateModeratorFields({
+                          field: "emailAddress",
+                          value: e.currentTarget.value,
+                          index: index,
+                        })
+                      )
+                    }
+                    name={`moderator[${index}][email]`}
+                    id={`moderator[${index}][email]`}
                     variant="outlined"
-                    placeholder="Name of moderator"
+                    placeholder="Email of moderator"
                   ></TextField>
                 </div>
               ))}
@@ -258,7 +289,9 @@ export default function ScheduleEventForm() {
                   <Checkbox
                     checked={formData.waitlist}
                     onChange={(e) =>
-                      updateFields({ waitlist: e.currentTarget.checked })
+                      dispatch(
+                        updateFields({ waitlist: e.currentTarget.checked })
+                      )
                     }
                   ></Checkbox>
                 }
@@ -274,10 +307,12 @@ export default function ScheduleEventForm() {
                 onChange={(e) => {
                   if (!Number.isNaN(e.currentTarget.value)) {
                     if (e.currentTarget.value == "") {
-                      updateFields({ cap: "" });
+                      dispatch(updateFields({ cap: "" }));
                     } else {
                       if (parsableInt(e.currentTarget.value)) {
-                        updateFields({ cap: parseInt(e.currentTarget.value) });
+                        dispatch(
+                          updateFields({ cap: parseInt(e.currentTarget.value) })
+                        );
                       }
                     }
                   }
@@ -291,31 +326,22 @@ export default function ScheduleEventForm() {
             type="password"
             variant="filled"
             placeholder="Type a descriptive name for your event here"
-            value={formData.passcode}
+            defaultValue={formData.passcode}
             onChange={(e) => updateFields({ passcode: e.currentTarget.value })}
           />
         </div>
 
         <br></br>
         <div className="flex justify-between px-5">
-          {/* // again, can't exactly have 2 submit buttons because they both perform different actions and you can't pass in functions into formAction */}
           <Button
             type="button"
             variant="contained"
+            onClick={() => router.push("/events/create/import")}
             loading={isPending}
-            onClick={() => {
-              prev();
-              router.push("/events/create/description");
-            }}
           >
             Previous
           </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            loading={isPending}
-            onClick={next}
-          >
+          <Button type="submit" variant="contained" loading={isPending}>
             Schedule Event
           </Button>
         </div>

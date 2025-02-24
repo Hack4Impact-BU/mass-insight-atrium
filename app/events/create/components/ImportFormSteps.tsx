@@ -134,7 +134,7 @@ export function SelectStep({
     onRowSelectionChange: setRowSelection,
     state: { rowSelection },
   });
-  console.log(rowSelection);
+
   return (
     <>
       <h1>Select the people that you want to invite:</h1>

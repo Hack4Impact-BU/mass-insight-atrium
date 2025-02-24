@@ -2,8 +2,9 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { MeetingCreateFormDataType } from "./create/meeting-form-provider";
+// import { MeetingCreateFormDataType } from "./create/meeting-form-provider";
 import bcrypt from "bcrypt";
+import { EventCreateFormState } from "@/lib/features/eventCreateForm/eventCreateFormSlice";
 export const eventNameFormAction = async () => {
   redirect("/events/create/description");
 };
@@ -15,9 +16,8 @@ export const descriptionFormAction = async () => {
 export const importFormAction = async () => {
   redirect("/events/create/schedule");
 };
-export const scheduleFormAction = async (
-  formData: MeetingCreateFormDataType
-) => {
+
+export const scheduleFormAction = async (formData: EventCreateFormState) => {
   if (formData.endDate < formData.startDate) {
     console.log(`Error with error endDate < startDate`);
     redirect("/events/create/schedule");
@@ -42,6 +42,7 @@ export const scheduleFormAction = async (
       start_time: formData.startDate, // will always exist because it's set to the current date by default
       waitlist: formData.waitlist,
       name: formData.meetingName,
+      details: formData.meetingDetails,
     })
     .select();
   if (error) {
@@ -76,6 +77,7 @@ export const scheduleFormAction = async (
       redirect("/events/create/schedule");
     }
   }
+  console.log(formData);
 
   redirect("/");
 };

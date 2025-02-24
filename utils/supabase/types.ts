@@ -91,6 +91,7 @@ export type Database = {
         Row: {
           cap: number | null
           description: string | null
+          details: string | null
           encrypted_passcode: string | null
           end_time: string
           location_type: Database["public"]["Enums"]["location_type"] | null
@@ -104,6 +105,7 @@ export type Database = {
         Insert: {
           cap?: number | null
           description?: string | null
+          details?: string | null
           encrypted_passcode?: string | null
           end_time: string
           location_type?: Database["public"]["Enums"]["location_type"] | null
@@ -117,6 +119,7 @@ export type Database = {
         Update: {
           cap?: number | null
           description?: string | null
+          details?: string | null
           encrypted_passcode?: string | null
           end_time?: string
           location_type?: Database["public"]["Enums"]["location_type"] | null

@@ -3,6 +3,9 @@ import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import "./globals.css";
+import { Suspense } from "react";
+import { Provider } from "react-redux";
+import StoreProvider from "./StoreProvider";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -31,9 +34,13 @@ export default function RootLayout({
       <body className={`bg-background text-foreground ${inter.className}`}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            <main className="min-h-screen max-h-screen min-w-full max-w-full">
-              {children}
-            </main>
+            <StoreProvider>
+              <Suspense>
+                <main className="min-h-screen max-h-screen min-w-full max-w-full">
+                  {children}
+                </main>
+              </Suspense>
+            </StoreProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

@@ -1,13 +1,31 @@
 "use client";
+import { updateFields } from "@/lib/features/eventCreateForm/eventCreateFormSlice";
+import { RootState } from "@/lib/store";
 import { Button, TextField } from "@mui/material";
-import { useMeetingFormContext } from "../meeting-form-provider";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
-import { eventNameFormAction } from "../../actions";
+import { useDispatch, useSelector } from "react-redux";
+import { useProgressContext } from "../RedirectManager";
 
 export default function EventNameForm() {
-  const { formData, updateFields } = useMeetingFormContext();
-  const [, formAction, isPending] = useActionState(eventNameFormAction, null);
+  const router = useRouter();
+  const formData = useSelector((state: RootState) => state.eventCreateForm);
+  const dispatch = useDispatch();
 
+  const [, formAction, isPending] = useActionState(
+    (_: void | null, data: FormData) => {
+      // console.log(data.get("meeting-name") as string);
+      dispatch(
+        updateFields({ meetingName: data.get("meeting-name") as string })
+      );
+      // console.log(formData);
+      next();
+      router.push("/events/create/description");
+    },
+    null
+  );
+  const { next } = useProgressContext();
+  // console.log(formData);
   return (
     <form action={formAction}>
       <h1 className="text-center mt-3">What is the name of your event?</h1>
@@ -15,15 +33,21 @@ export default function EventNameForm() {
         <TextField
           required
           label="Event Name"
+          name="meeting-name"
+          id="meeting-name"
           variant="filled"
           placeholder="Type a descriptive name for your event here"
-          value={formData.meetingName}
+          defaultValue={formData.meetingName}
           sx={{ width: 1 / 2 }}
-          onChange={(e) => updateFields({ meetingName: e.currentTarget.value })}
         />
 
         <div className="flex flex-row-reverse w-full">
-          <Button type="submit" variant="contained" loading={isPending}>
+          <Button
+            type="submit"
+            variant="contained"
+            loading={isPending}
+            // onClick={() => {dispatch(updateFields({ meetingName: "test name" })); console.log(formData)}}
+          >
             Next
           </Button>
         </div>

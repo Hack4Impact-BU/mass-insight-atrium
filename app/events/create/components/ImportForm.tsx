@@ -1,13 +1,18 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { ImportStep, SelectStep } from "./ImportFormSteps";
 import { Button } from "@mui/material";
 import { importFormAction } from "../../actions";
 import { MRT_RowSelectionState } from "material-react-table";
-import { useMeetingFormContext } from "../meeting-form-provider";
+import { useDispatch } from "react-redux";
+import { updateFields } from "@/lib/features/eventCreateForm/eventCreateFormSlice";
+import { redirect, usePathname, useRouter } from "next/navigation";
+import { useProgressContext } from "../RedirectManager";
+import { steps } from "../../utils";
 
 export default function ImportForm() {
-  const { updateFields } = useMeetingFormContext();
+  const router = useRouter();
+  const dispatch = useDispatch();
   const [step, setStep] = useState(0);
   const [data, setData] = useState([]);
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
@@ -31,12 +36,14 @@ export default function ImportForm() {
       }
       people.push(result);
     }
-    updateFields({ attendees: people });
-    importFormAction();
+    dispatch(updateFields({ attendees: people }));
+    next();
+    router.push("/events/create/schedule");
   }, null);
-  const [filters, setFilters] = useState<unknown[]>([]);
-  const next = () => setStep((step) => step + 1);
-  const prev = () => {
+  const pathname = usePathname();
+  const { prev, next, pageNum } = useProgressContext();
+  const nextPage = () => setStep((step) => step + 1);
+  const prevPage = () => {
     if (step > 0) {
       setStep((step) => step - 1);
     }
@@ -44,7 +51,7 @@ export default function ImportForm() {
   const forms = [
     <ImportStep
       key="Import"
-      next={next}
+      next={nextPage}
       setData={(data) => {
         setData(data);
       }}
@@ -56,15 +63,42 @@ export default function ImportForm() {
       setRowSelection={setRowSelection}
     ></SelectStep>,
   ];
+  useEffect(() => {
+    if (steps[pageNum].route != pathname) {
+      redirect(steps[pageNum].route);
+    }
+  }, [pageNum, pathname]);
+
   return (
     <form action={formAction}>
       {forms[step]}
-      {step != 0 && step < forms.length - 1 ? (
-        <Button type="button">Next</Button>
-      ) : (
-        <Button type="submit">Submit</Button>
+      {step != 0 && step < forms.length - 1 && (
+        <Button type="button" onClick={nextPage} loading={isPending}>
+          Next
+        </Button>
       )}
-      {step > 0 && <Button type="button">Previous</Button>}
+      {step == forms.length - 1 && (
+        <Button type="submit" loading={isPending}>
+          Submit
+        </Button>
+      )}
+      {step != 0 && (
+        <Button type="button" onClick={prevPage} loading={isPending}>
+          Previous
+        </Button>
+      )}
+      {step == 0 && (
+        <Button
+          type="button"
+          onClick={() => {
+            prev();
+            router.push("/events/create/description");
+          }}
+          loading={isPending}
+        >
+          Previous
+        </Button>
+      )}
     </form>
   );
 }

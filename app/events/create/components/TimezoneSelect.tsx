@@ -1,8 +1,11 @@
+import { RootState } from "@/lib/store";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import { useMeetingFormContext } from "../meeting-form-provider";
+import { useSelector } from "react-redux";
 
 export default function TimezoneSelect() {
-  const { formData, updateFields } = useMeetingFormContext();
+  const formData = useSelector(
+    (state: RootState) => state.eventCreateForm.timezone
+  );
   return (
     <FormControl>
       <InputLabel id="timezone-label">Time Zone</InputLabel>
@@ -10,8 +13,7 @@ export default function TimezoneSelect() {
         labelId="timezone-label"
         id="timezone-select"
         label="Time Zone"
-        value={formData.timezone}
-        onChange={(e) => updateFields({ timezone: e.target.value })}
+        defaultValue={formData}
       >
         <MenuItem value="-12:00">(GMT -12:00) Eniwetok, Kwajalein</MenuItem>
         <MenuItem value="-11:00">(GMT -11:00) Midway Island, Samoa</MenuItem>
