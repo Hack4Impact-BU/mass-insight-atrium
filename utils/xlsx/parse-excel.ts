@@ -10,6 +10,10 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Missing Supabase credentials. Check your .env file.");
 }
 
+// add support for csv files
+// add extra failsafes for incorrect file formatting
+//  - first row non-label
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 interface RowData {
@@ -56,7 +60,7 @@ const parseExcel = async (fileBuffer: Buffer): Promise<RowData[]> => {
           value = cell.value.hyperlink.split(":")[1]; // Use the link itself
         } else {
           // Default to empty string for unknown object types, could give error instead
-          value = "N/A"; 
+          value = "N/A";
         }
       } else {
         // Handle simple strings, numbers, or booleans
@@ -133,11 +137,36 @@ const insertIntoSupabase = async (data: RowData[]) => {
  * @param file - The uploaded Excel file.
  *
  * Might need edits to intake a correct file type - Simon 2/2/25
- */
-export const handleFileUpload = async (file: { buffer: Buffer }) => {
+//  */
+// export const handleFileUpload = async (file: { buffer: Buffer }) => {
+//   try {
+//     const jsonData = await parseExcel(file.buffer);
+//     console.log("Parsed Data:", jsonData);
+//     await insertIntoSupabase(jsonData);
+//     console.log("Upload completed successfully!");
+//   } catch (error) {
+//     console.error("Error processing file:", error);
+//   }
+// };
+
+export const handleFileUpload = async (
+  file: { buffer: Buffer },
+  isJsonFile?: boolean // Optional parameter
+) => {
   try {
-    const jsonData = await parseExcel(file.buffer);
+    let jsonData;
+
+    if (isJsonFile) {
+      // Parse JSON directly
+      jsonData = JSON.parse(file.buffer.toString());
+    } else {
+      // Parse Excel file
+      jsonData = await parseExcel(file.buffer);
+    }
+
     console.log("Parsed Data:", jsonData);
+
+    // Insert parsed data into Supabase
     await insertIntoSupabase(jsonData);
     console.log("Upload completed successfully!");
   } catch (error) {
