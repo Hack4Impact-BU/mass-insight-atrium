@@ -27,7 +27,7 @@ export const isValidFileType = (
 export const isValidFormat = (data: any[]) => {
   if (!data || data.length === 0) return false;
   const columns = Object.keys(data[0]);
-  // TODO: Add check for required columns
+  // TODO: Add check for required columns & more specific checks for column formats
   const requiredColumns = [
     "first_name", "last_name", "id", "date_of_birth", "email", "role_profile", "race_ethnicity", "state_work", "district_name", "district_id", "school_name", "school_id", 
     "content_area", "sy2024_25_course", "sy2024_25_grade_level"
@@ -54,54 +54,78 @@ interface RowData {
   sy2024_25_grade_level: number;
 }
 
-export const uploadDataSheeToSupabase = async (data: RowData[]) => {
+export const uploadDataSheetToSupabase = async (data: RowData[]) => {
   const districtMap = new Map();
   const schoolMap = new Map();
-
-  for (const row of data) {
-    let district_id = row.district_id;
-    let school_id = row.school_id;
-
+  const districtInserts = data.map((row) => {
     if (!districtMap.has(row.district_id)) {
-      const { error: districtError } = await supabase
-        .from("districts")
-        .upsert([{ id: district_id, name: row.district_name }], {
-          onConflict: "id",
-        })
-
-      if (districtError) console.error("District Insert Error:", districtError);
-      districtMap.set(row.district_name, district_id);
+      districtMap.set(row.district_id, row.district_name);
+      return {
+        id: row.district_id,
+        name: row.district_name,
+      };
     }
+  }).filter(row => row && row !== undefined);
 
+  const schoolInserts = data.map((row) => {
     if (!schoolMap.has(row.school_id)) {
-      const { error: schoolError } = await supabase
-        .from("schools")
-        .upsert([{ id: school_id, name: row.school_name, district_id }], {
-          onConflict: "id",
-        })
-
-      if (schoolError) console.error("School Insert Error:", schoolError);
-      schoolMap.set(row.school_name, school_id);
+      schoolMap.set(row.school_id, row.school_name);
+      return {
+        id: row.school_id,
+        name: row.school_name,
+        district_id: row.district_id,
+      };
     }
+  }).filter(row => row && row !== undefined);
 
-    const { error: personError } = await supabase.from("people").upsert(
-      [
-        {
-          id: row.id,
-          first_name: row.first_name,
-          last_name: row.last_name,
-          date_of_birth: row.date_of_birth,
-          email: row.email,
-          role_profile: row.role_profile,
-          race_ethnicity: row.race_ethnicity,
-          state_work: row.state_work,
-          district_id,
-          school_id,
-        },
-      ],
+  const personInserts = data.map((row) => {
+    return {
+      id: row.id,
+      first_name: row.first_name,
+      last_name: row.last_name,
+      date_of_birth: row.date_of_birth,
+      email: row.email,
+      role_profile: row.role_profile,
+      role_ethnicity: row.race_ethnicity,
+      state_work: row.state_work,
+      district_id: row.district_id,
+      school_id: row.school_id,
+    };
+  }).filter(row => row || row !== undefined);
+
+  const { error: districtInsertError } = await supabase
+    .from("districts")
+    .upsert(
+      districtInserts,
       { onConflict: "id" }
     );
 
-    if (personError) console.error("Person Insert Error:", personError);
+  if (districtInsertError) {
+    console.error("District Insert Error:", districtInsertError);
+    throw districtInsertError;
+  }
+
+  const { error: schoolInsertError } = await supabase
+    .from("schools")
+    .upsert(
+      schoolInserts,
+      { onConflict: "id" }
+    );
+  
+  if (schoolInsertError) {
+    console.error("School Insert Error:", schoolInsertError);
+    throw schoolInsertError;
+  }
+
+  const { error: personInsertError } = await supabase
+    .from("people")
+    .upsert(
+      personInserts,
+      { onConflict: "id" }
+    );
+
+  if (personInsertError) {
+    console.error("Person Insert Error:", personInsertError);
+    throw personInsertError;
   }
 };

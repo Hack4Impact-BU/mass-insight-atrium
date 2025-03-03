@@ -62,34 +62,6 @@ export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
       setFileData([]);
       alert(error.message);
     }
-
-
-      // const validExtensions = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
-      // const fileExtension = uploadedFile.type;
-      // console.log(fileExtension);
-
-      // if (validExtensions.includes(fileExtension)) {
-      //   setFile(uploadedFile);
-
-      //   // Parse the uploaded file
-      //   const reader = new FileReader();
-      //   reader.readAsArrayBuffer(uploadedFile);
-      //   reader.onload = (e) => {
-      //     const buffer = e.target?.result;
-      //     const workbook = XLSX.read(buffer, { type: "array" });
-
-      //     // Get first sheet and convert to JSON
-      //     const sheetName = workbook.SheetNames[0];
-      //     const worksheet = workbook.Sheets[sheetName];
-      //     const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      //     setFileData(jsonData);
-      //   };
-      // } else {
-      //   setFile(null);
-      //   setFileData([]);
-      //   alert("Invalid file type. Please upload a .csv or .xlsx file.");
-      // }
   };
 
 

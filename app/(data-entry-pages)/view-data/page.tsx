@@ -2,14 +2,14 @@
 "use client";
 
 import { useFile } from "@/utils/upload-data/file-context";
-import { useEffect, useRef } from "react";
 import { Typography, Button } from "@mui/material";
-import { uploadDataSheeToSupabase } from "@/utils/upload-data/master-data-upload";
+import { uploadDataSheetToSupabase } from "@/utils/upload-data/master-data-upload";
 
 import { HotTable } from "@handsontable/react";
 import "handsontable/dist/handsontable.full.min.css";
 
 import { registerAllModules } from "handsontable/registry";
+import { redirect } from "next/navigation";
 
 // Register all Handsontable modules (including filters)
 registerAllModules();
@@ -29,19 +29,19 @@ export default function ViewData() {
     width: 150,
   }));
 
-
-    const uploadSupabase = async () => {
-      if (!fileData) {
-          console.error("No file data found.");
-          return;
-        }
-
-        try {
-          await uploadDataSheeToSupabase (fileData);
-        } catch (error) {
-          console.error("Failed to upload file:", error);
-        }
+  const handleUploadConfirm = async () => {
+    if (!fileData) {
+      console.error("No file data to upload");
+      return;
     }
+
+    try {
+      await uploadDataSheetToSupabase(fileData);
+    } catch (error) {
+      console.error("Error uploading data", error);
+      alert("Error uploading data, please try again");
+    }
+  }
 
   return (
     <>
@@ -100,7 +100,7 @@ export default function ViewData() {
                 variant="contained"
                 className="normal-case bg-blue-600 text-white px-6"
                 disabled={!fileData}
-                onClick={uploadSupabase}
+                onClick={handleUploadConfirm}
               >
                 {/* <a href="/next-step"> */}
                   <Typography className="normal-case p-3">Upload</Typography>
