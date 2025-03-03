@@ -1,10 +1,10 @@
 // app/view-data/page.tsx
 "use client";
 
-import { useFile } from "@/utils/xlsx/file-context";
+import { useFile } from "@/utils/upload-data/file-context";
 import { useEffect, useRef } from "react";
 import { Typography, Button } from "@mui/material";
-import { handleFileUpload } from "@/utils/xlsx/parse-excel";
+import { uploadDataSheeToSupabase } from "@/utils/upload-data/master-data-upload";
 
 import { HotTable } from "@handsontable/react";
 import "handsontable/dist/handsontable.full.min.css";
@@ -15,15 +15,7 @@ import { registerAllModules } from "handsontable/registry";
 registerAllModules();
 
 export default function ViewData() {
-  const { file, fileData, setFile, setFileData } = useFile();
-  const hotRef = useRef<HotTable>(null);
-  useEffect(() => {
-    const storedData = sessionStorage.getItem("fileData");
-    if (storedData) {
-      console.log("Restoring file data from sessionStorage");
-      setFileData(JSON.parse(storedData));
-    }
-  }, [setFileData]);
+  const { fileData } = useFile();
 
   if (!fileData || fileData.length === 0) {
     return <p className="text-center mt-10">No data to display</p>;
@@ -37,24 +29,15 @@ export default function ViewData() {
     width: 150,
   }));
 
-  // Draft version of upload to supabase off next button
 
     const uploadSupabase = async () => {
-      console.log();
       if (!fileData) {
           console.error("No file data found.");
           return;
         }
 
         try {
-          // Determine if it's JSON or Excel based on file extension
-          // const isJsonFile = fileData.name?.endsWith(".json");
-
-          // Convert ArrayBuffer (from fileData) to Buffer
-          const buffer = Buffer.from(await fileData);
-
-          await handleFileUpload({ buffer }, true);
-          console.log("File uploaded successfully!");
+          await uploadDataSheeToSupabase (fileData);
         } catch (error) {
           console.error("Failed to upload file:", error);
         }
@@ -119,9 +102,9 @@ export default function ViewData() {
                 disabled={!fileData}
                 onClick={uploadSupabase}
               >
-                <a href="/next-step">
+                {/* <a href="/next-step"> */}
                   <Typography className="normal-case p-3">Upload</Typography>
-                </a>
+                {/* </a> */}
               </Button>
             </div>
           </div>

@@ -2,11 +2,11 @@
 
 import { Button, Typography } from "@mui/material";
 import { UploadFileButton } from "@/components/upload-file-button";
-import { useFile } from "@/utils/xlsx/file-context";
+import { redirect } from "next/navigation";
+import { useFile } from "@/utils/upload-data/file-context";
 
 export default function uploadData() {
-  const { file, setFile } = useFile();
-  console.log("UploadData file:", file);
+  const { file, setFile, setFileData } = useFile();
 
   return (
     <>
@@ -27,7 +27,7 @@ export default function uploadData() {
           </div>
 
           <div className="relative mt-10">
-            <UploadFileButton></UploadFileButton>
+            <UploadFileButton file={file} setFile={setFile} setFileData={setFileData} />
           </div>
 
           <div>
@@ -62,11 +62,11 @@ export default function uploadData() {
                 variant="contained"
                 className="normal-case bg-blue-600 text-white px-6"
                 disabled={!file}
+                onClick={() => {
+                  redirect("/view-data");
+                }}
               >
-                {/* disable next until file is uploaded */}
-                <a href="/view-data">
                   <Typography className="normal-case p-3">Next</Typography>
-                </a>
               </Button>
             </div>
           </div>

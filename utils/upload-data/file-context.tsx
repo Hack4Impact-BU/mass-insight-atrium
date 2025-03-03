@@ -21,24 +21,6 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
   const [file, setFile] = useState<File | null>(null);
   const [fileData, setFileData] = useState<any[] | null>(null);
 
-  // Store parsed data in sessionStorage for persistence
-  useEffect(() => {
-    if (fileData) {
-      sessionStorage.setItem("fileData", JSON.stringify(fileData));
-      console.log(fileData);
-    } else {
-      sessionStorage.removeItem("fileData");
-    }
-  }, [fileData]);
-
-  // Restore fileData from sessionStorage
-  useEffect(() => {
-    const storedData = sessionStorage.getItem("fileData");
-    if (storedData) {
-      setFileData(JSON.parse(storedData));
-    }
-  }, []);
-
   return (
     <FileContext.Provider value={{ file, fileData, setFile, setFileData }}>
       {children}

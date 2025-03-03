@@ -1,12 +1,9 @@
 import { ReactNode, Suspense } from "react";
 import Steps from "./components/StepperWrapper";
-// import { RedirectManager } from "./RedirectManager";
-import StoreProvider from "@/app/StoreProvider";
 import { RedirectManager } from "./RedirectManager";
 
 export default async function Layout({ children }: { children: ReactNode }) {
   return (
-    // <RedirectManager>
     <RedirectManager>
       <Suspense>
         <div className="px-10">
@@ -17,7 +14,5 @@ export default async function Layout({ children }: { children: ReactNode }) {
         </div>
       </Suspense>
     </RedirectManager>
-
-    // </RedirectManager>
   );
 }
