@@ -6,6 +6,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import { Provider } from "react-redux";
 import StoreProvider from "./StoreProvider";
+import Navbar from "./Navbar";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -37,6 +38,7 @@ export default function RootLayout({
             <StoreProvider>
               <Suspense>
                 <main className="min-h-screen max-h-screen min-w-full max-w-full">
+                  <Navbar></Navbar>
                   {children}
                 </main>
               </Suspense>
