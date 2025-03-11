@@ -6,7 +6,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import { Provider } from "react-redux";
 import StoreProvider from "./StoreProvider";
-import Navbar from "./Navbar";
+import Navbar from "../components/Navbar";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
