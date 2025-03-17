@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { Typography, Button } from "@mui/material";
 import { uploadDataSheeToSupabase } from "@/utils/upload-data/master-data-upload";
 
-import { HotTable } from "@handsontable/react";
+import { HotTable } from "@handsontable/react-wrapper";
 import "handsontable/dist/handsontable.full.min.css";
 
 import { registerAllModules } from "handsontable/registry";

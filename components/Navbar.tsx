@@ -106,7 +106,7 @@ export default function Navbar() {
           >
             <MenuItem
               onClick={() => {
-                handleClose("/data");
+                handleClose("/upload-data");
               }}
             >
               Data Entry
