@@ -72,7 +72,7 @@ export default function Preview() {
                   </div>
                 ) : (
                   <p className="text-center text-gray-500">
-                    {/* needs loading state added */}No file uploaded
+                    No file uploaded
                   </p>
                 )}
               </div>
@@ -94,7 +94,6 @@ export default function Preview() {
                     variant="contained"
                     className="normal-case bg-blue-600 text-white px-6"
                     disabled={!fileData}
-                    onClick={uploadSupabase}
                 >
                     <Typography className="normal-case p-3">Upload</Typography>
                 </Button>

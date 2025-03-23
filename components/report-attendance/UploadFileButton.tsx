@@ -5,8 +5,6 @@ import { Button, Typography, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import * as Papa from "papaparse";
-import { time } from "console";
-import { set } from "zod";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
