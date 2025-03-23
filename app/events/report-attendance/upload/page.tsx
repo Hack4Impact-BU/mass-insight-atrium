@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { useFile } from "@/utils/upload-data/file-context";
 import { useState } from "react";
 
-export default function uploadData() {
+export default function Upload() {
   const { file, setFile, setFileData } = useFile();
   const [loading, setLoading] = useState(false);
 
@@ -63,7 +63,7 @@ export default function uploadData() {
                 className="normal-case bg-blue-600 text-white px-6"
                 disabled={!file || loading}
                 onClick={() => {
-                  redirect("/view-data");
+                  redirect("/events/report-attendance/preview");
                 }}
               >
                   <Typography className="normal-case p-3">
