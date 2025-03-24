@@ -111,6 +111,13 @@ export default function Navbar() {
             >
               Data Entry
             </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleClose("/manage-reports");
+              }}
+            >
+              Manage Reports
+            </MenuItem>
           </Menu>
         </div>
       </Stack>

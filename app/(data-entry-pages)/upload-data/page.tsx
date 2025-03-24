@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { useFile } from "@/utils/upload-data/file-context";
 
 export default function uploadData() {
-  const { file, setFile, setFileData } = useFile();
+  const { file, setFile, setFileData, addToFileList, addToFileListData } = useFile();
 
   return (
     <>
@@ -27,7 +27,7 @@ export default function uploadData() {
           </div>
 
           <div className="relative mt-10">
-            <UploadFileButton file={file} setFile={setFile} setFileData={setFileData} />
+            <UploadFileButton file={file} setFile={setFile} setFileData={setFileData} addToFileList={addToFileList} addToFileListData={addToFileListData} />
           </div>
 
           <div>

@@ -23,12 +23,16 @@ export type UploadFileButtonProps = {
   file: File | null;
   setFile: (file: File | null) => void;
   setFileData: (data: any[]) => void;
+  addToFileListData: (data: any[]) => void;
+  addToFileList: (data: File) => void;
 };
 
 export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
   file,
   setFile,
   setFileData,
+  addToFileListData,
+  addToFileList
 }) => {
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -55,6 +59,8 @@ export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
         }
         setFile(uploadedFile);
         setFileData(jsonData);
+        addToFileList(uploadedFile)
+        addToFileListData(jsonData)
       }
       reader.readAsArrayBuffer(uploadedFile);
     } catch (error: any) {
