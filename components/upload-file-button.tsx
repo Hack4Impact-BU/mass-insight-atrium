@@ -43,7 +43,7 @@ export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
         throw new Error("No file uploaded.");
       }
       const reader = new FileReader();
-      const validExtensions = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
+      const validExtensions = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"];
       reader.onload = (e) => {
         const buffer = e.target?.result;
         const workbook = XLSX.read(buffer, { type: "array" });

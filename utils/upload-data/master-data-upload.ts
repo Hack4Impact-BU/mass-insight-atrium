@@ -15,6 +15,7 @@ export const isValidFileType = (
 ) => {
   if (!file) return false;
   const fileExtension = file.type;
+  console.log(fileExtension)
   return validExtensions.includes(fileExtension);
 };
 
