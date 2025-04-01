@@ -78,6 +78,13 @@ export default function Navbar() {
             </MenuItem>
             <MenuItem
               onClick={() => {
+                handleClose("/events/manage");
+              }}
+            >
+              Manage Events Created
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
                 handleClose("/emails/steps/one");
               }}
             >

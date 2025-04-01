@@ -109,17 +109,35 @@ export default function ScheduleEventForm() {
                 <FormControlLabel
                   value="online"
                   label="Online"
-                  control={<Radio></Radio>}
+                  control={
+                    <Radio
+                      onClick={() =>
+                        dispatch(updateFields({ locationType: "online" }))
+                      }
+                    ></Radio>
+                  }
                 ></FormControlLabel>
                 <FormControlLabel
                   value="inperson"
                   label="In-person"
-                  control={<Radio></Radio>}
+                  control={
+                    <Radio
+                      onClick={() =>
+                        dispatch(updateFields({ locationType: "inperson" }))
+                      }
+                    ></Radio>
+                  }
                 ></FormControlLabel>
                 <FormControlLabel
                   value="both"
                   label="Both"
-                  control={<Radio></Radio>}
+                  control={
+                    <Radio
+                      onClick={() =>
+                        dispatch(updateFields({ locationType: "both" }))
+                      }
+                    ></Radio>
+                  }
                 ></FormControlLabel>
               </RadioGroup>
             </FormControl>
