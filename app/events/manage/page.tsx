@@ -27,6 +27,7 @@ export default function Page() {
         {meetingData?.map((entry, index) => (
           <Button
             variant="outlined"
+            sx={{ padding: "1rem" }}
             key={index}
             onClick={() => router.push(`/events/view/${entry.meeting_id}`)}
           >
@@ -40,6 +41,7 @@ export default function Page() {
 
         <Button
           variant="outlined"
+          sx={{ padding: "1rem" }}
           onClick={() => router.push("/events/create/start")}
         >
           <div className="flex flex-col">
