@@ -15,7 +15,7 @@ import { registerAllModules } from "handsontable/registry";
 registerAllModules();
 
 export default function ViewData() {
-  const { fileData } = useFile();
+  const { fileData, file } = useFile();
 
   if (!fileData || fileData.length === 0) {
     return <p className="text-center mt-10">No data to display</p>;
@@ -51,7 +51,7 @@ export default function ViewData() {
           <div className="flex flex-col items-center justify-between min-h-screen py-10 bg-gray-100">
             {/* Title Section */}
             <Typography variant="h4" className="font-extrabold mb-2">
-              Review Data Spreadsheet
+              Review Data Spreadsheet: {file?.name}
             </Typography>
 
             {/* Spreadsheet Section */}

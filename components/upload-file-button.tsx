@@ -23,12 +23,16 @@ export type UploadFileButtonProps = {
   file: File | null;
   setFile: (file: File | null) => void;
   setFileData: (data: any[]) => void;
+  addToFileListData: (data: any[]) => void;
+  addToFileList: (data: File) => void;
 };
 
 export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
   file,
   setFile,
   setFileData,
+  addToFileListData,
+  addToFileList
 }) => {
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -39,7 +43,7 @@ export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
         throw new Error("No file uploaded.");
       }
       const reader = new FileReader();
-      const validExtensions = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
+      const validExtensions = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"];
       reader.onload = (e) => {
         const buffer = e.target?.result;
         const workbook = XLSX.read(buffer, { type: "array" });
@@ -55,6 +59,8 @@ export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
         }
         setFile(uploadedFile);
         setFileData(jsonData);
+        addToFileList(uploadedFile)
+        addToFileListData(jsonData)
       }
       reader.readAsArrayBuffer(uploadedFile);
     } catch (error: any) {

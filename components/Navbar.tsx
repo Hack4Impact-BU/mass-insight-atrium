@@ -78,6 +78,13 @@ export default function Navbar() {
             </MenuItem>
             <MenuItem
               onClick={() => {
+                handleClose("/events/manage");
+              }}
+            >
+              Manage Events Created
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
                 handleClose("/emails/steps/one");
               }}
             >
@@ -110,6 +117,13 @@ export default function Navbar() {
               }}
             >
               Data Entry
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleClose("/manage-reports");
+              }}
+            >
+              Manage Reports
             </MenuItem>
           </Menu>
         </div>
