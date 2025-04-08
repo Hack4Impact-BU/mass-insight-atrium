@@ -1,9 +1,9 @@
-const { meetingData } = require('./testData.js')
-
-function getNumOfAttendees(meetingID, meetingData){
+export function getNumOfAttendees(meetingID, meetingData){
+    let totalStudents = []
     for (let x=0; x < meetingData.length; x++){
         if(meetingData[x].id == meetingID){
-            return meetingData[x].attendees;
+            totalStudents = meetingData[x].attendees;
         }
     }
-  }
+    return totalStudents;
+}
