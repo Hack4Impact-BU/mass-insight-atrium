@@ -9,27 +9,25 @@ export default function ViewData() {
     <>
       {/* Needs to have navbar component added */}
       <>
-        <div className="w-full">
-          <div className="flex flex-col items-center justify-between min-h-screen py-10 bg-gray-100">
+        <div className="w-full bg-gray-100">
+          <div className="flex flex-col items-center justify-between max-h-screen p-10 ">
             {/* Title Section */}
             <Typography variant="h4" className="font-extrabold mb-2">
               Master Data Spreadsheet
             </Typography>
 
             {/* Spreadsheet Section */}
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-7xl py-5">
               <PeopleTable />
-            </div>
+              {/* Navigation Buttons */}
+              <div className="flex justify-between w-full mt-5">
+                <Button className="text-blue-600" variant="outlined">
+                  <a href="/upload-data">
+                    <Typography className="normal-case p-3">Back</Typography>
+                  </a>
+                </Button>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between w-full max-w-4xl mt-5">
-              <Button className="text-blue-600" variant="outlined">
-                <a href="/upload-data">
-                  <Typography className="normal-case p-3">Back</Typography>
-                </a>
-              </Button>
-
-              {/* <Button
+                {/* <Button
                 variant="contained"
                 className="normal-case bg-blue-600 text-white px-6"
                 disabled={!fileData}
@@ -37,6 +35,7 @@ export default function ViewData() {
               >
                 <Typography className="normal-case p-3">Upload</Typography>
               </Button> */}
+              </div>
             </div>
           </div>
         </div>

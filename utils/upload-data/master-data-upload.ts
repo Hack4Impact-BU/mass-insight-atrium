@@ -1,6 +1,7 @@
 import { createClient } from "../supabase/client";
 import dotenv from "dotenv";
 dotenv.config();
+//papapase for csv
 
 const supabase = createClient();
 /**

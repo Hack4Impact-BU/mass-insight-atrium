@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
-import { HotTable } from "@handsontable/react-wrapper";
-import "handsontable/dist/handsontable.full.min.css";
-import type { Config } from "handsontable/plugins/columnSorting";
-
-import { registerAllModules } from "handsontable/registry";
+import { DataGrid, GridColDef, GridSortModel } from "@mui/x-data-grid";
 import { fetchFilteredData } from "@/utils/upload-data/master-data-fetch";
 import type { ColumnConditions } from "@/utils/upload-data/master-data-fetch";
 
-registerAllModules();
-
 const PeopleTable = () => {
   interface Person {
+    id: number;
     first_name: string;
     last_name: string;
-    id: number;
     date_of_birth: string | null;
     email: string | null;
     role_profile: string | null;
@@ -24,11 +18,9 @@ const PeopleTable = () => {
   }
 
   const [people, setPeople] = useState<Person[]>([]);
-  const [filters, setFilters] = useState<ColumnConditions[]>([]);
-  const [sortColumn, setSortColumn] = useState<number | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortModel, setSortModel] = useState<GridSortModel>([]);
   const [page, setPage] = useState(1);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState(25); // Changed to useState
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -36,8 +28,10 @@ const PeopleTable = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      console.log("Sort model:", sortModel);
+      const sortColumn = sortModel[0]?.field || "id"; // Default to "id" if no sort is applied
+      const sortOrder = sortModel[0]?.sort || "asc"; // Default to ascending order
       const { data, totalCount } = await fetchFilteredData({
-        filters,
         sortColumn,
         sortOrder,
         page,
@@ -55,78 +49,47 @@ const PeopleTable = () => {
   // Fetch data when filters, sorting, or pagination change
   useEffect(() => {
     fetchData();
-  }, [filters, sortColumn, sortOrder, page]);
+  }, [sortModel, page, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   // Define column headers dynamically
-  const columns = people.length > 0 ? Object.keys(people[0]) : [];
-  const columnSettings = columns.map((key) => ({
-    data: key,
-    title: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " "),
-    width: 150,
-  }));
+  const columns: GridColDef[] =
+    people.length > 0
+      ? Object.keys(people[0]).map((key) => ({
+          field: key,
+          headerName:
+            key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " "),
+          width: 150,
+          sortable: true,
+        }))
+      : [];
 
   return (
-    <div className="flex flex-col items-center gap-6 mt-10">
-      {/* Pagination Controls */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page === 1}
-          className="p-2 border rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span>
-          Page {page} of {totalPages}
-        </span>
-        <button
-          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={page >= totalPages}
-          className="p-2 border rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-
-      {/* Handsontable Component */}
-      <div className="overflow-auto border border-gray-300 rounded-lg w-full">
-        <HotTable
-          data={people}
-          colHeaders={columns}
-          columns={columnSettings}
-          rowHeaders={true}
-          dropdownMenu={[
-            "filter_by_condition",
-            "filter_by_value",
-            "filter_action_bar",
-          ]}
-          columnSorting={true} // Enable sorting UI
-          filters={true}
-          stretchH="all"
-          licenseKey="non-commercial-and-evaluation"
-          width="1400"
-          height="600px"
-          afterFilter={(conditions) => setFilters(conditions)}
-          afterColumnSort={(
-            currentSortConfig: Config[], // Previous sorting state
-            destinationSortConfigs: Config[] // Updated sorting state
-          ) => {
-            console.log("Before sorting:", currentSortConfig);
-            console.log("After sorting:", destinationSortConfigs);
-
-            if (destinationSortConfigs.length > 0) {
-              setSortColumn(destinationSortConfigs[0].column);
-              setSortOrder(destinationSortConfigs[0].sortOrder || "asc");
-            } else {
-              setSortColumn(null);
-              setSortOrder("asc");
-            }
+    <div className="flex flex-col items-center gap-6 mt-5">
+      {/* Material UI DataGrid Component */}
+      <div className="w-full h-[600px] border border-gray-300 rounded-lg">
+        <DataGrid
+          rows={people}
+          columns={columns}
+          rowCount={totalCount}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: pageSize, page: page - 1 },
+            },
           }}
+          paginationModel={{ page: page - 1, pageSize }} // DataGrid uses 0-based indexing for pages
+          paginationMode="server"
+          sortingMode="server"
+          sortModel={sortModel}
+          onSortModelChange={(model) => setSortModel(model)}
+          onPaginationModelChange={(model) => {
+            setPage(model.page + 1); // Convert to 1-based indexing
+            setPageSize(model.pageSize); // Update pageSize dynamically
+          }}
+          loading={loading}
         />
       </div>
-
       {/* Loading Indicator */}
       {loading && <p className="mt-4">Loading data...</p>}
     </div>

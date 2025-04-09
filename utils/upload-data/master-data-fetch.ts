@@ -47,17 +47,23 @@ export const fetchFilteredData = async ({
   pageSize = 10,
 }: {
   filters?: ColumnConditions[];
-  sortColumn?: number | null;
+  sortColumn?: string | null;
   sortOrder?: "asc" | "desc";
   page?: number;
   pageSize?: number;
 }) => {
+  // put all the filter into the query itself and then fetch the data
+  // setup all filters before and make one call to the database
+  // filter w/ empty or *
+
   let query = supabase.from("people").select("*", { count: "exact" }); // Fetch total count
 
   // Apply filters
   filters.forEach(({ column, conditions }) => {
     const columnName = getColumnKey(column);
+    console.log("Applying filter on column:", columnName);
     conditions.forEach(({ name, args }) => {
+      console.log("Filter condition:", { name, args });
       if (!name || args.length === 0) return;
 
       if (name === "contains") query = query.ilike(columnName, `%${args[0]}%`);
@@ -69,23 +75,24 @@ export const fetchFilteredData = async ({
 
   // Apply sorting FIRST before pagination
   if (sortColumn !== null) {
-    const columnName = getColumnKey(sortColumn);
+    const columnName = sortColumn;
     if (columnName) {
-      console.log("Sorting by:", columnName, "Order:", sortOrder);
-      console.log("Sorting:", { columnName, sortOrder, ascending: sortOrder === "desc" }); // Fixed logic
-      query = query.order(columnName, { ascending: sortOrder === "desc" }); // Inverted flag
+      console.log("Sorting by column:", columnName, "Order:", sortOrder);
+      query = query.order(columnName, { ascending: sortOrder === "asc" });
+    } else {
+      console.warn("Invalid sort column:", sortColumn);
     }
-}
-
-
+  }
 
   // Apply pagination AFTER sorting
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  console.log("Pagination range:", { from, to });
   query = query.range(from, to);
 
   // Fetch data
   const { data, error, count } = await query;
+  console.log("Final query result:", { data, error, count });
 
   if (error) {
     console.error("Error fetching data:", error);

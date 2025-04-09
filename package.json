@@ -27,6 +27,8 @@
     "@mui/icons-material": "^6.4.2",
     "@mui/material": "^6.4.2",
     "@mui/material-nextjs": "^6.4.2",
+    "@mui/x-data-grid": "^7.28.3",
+    "@mui/x-data-grid-premium": "^7.28.3",
     "@mui/x-date-pickers": "^7.27.1",
     "@next/eslint-plugin-next": "^15.2.0",
     "@radix-ui/react-checkbox": "^1.1.1",
