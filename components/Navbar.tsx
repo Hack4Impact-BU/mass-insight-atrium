@@ -90,6 +90,13 @@ export default function Navbar() {
             >
               Send Emails
             </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleClose("/events/report-attendance/create");
+              }}
+            >
+              Create Event Attendance Report
+            </MenuItem>
           </Menu>
         </div>
         <div>
