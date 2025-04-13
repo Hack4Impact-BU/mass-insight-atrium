@@ -52,16 +52,14 @@ setError,
 
         const text = await uploadedFile.text();
 
-        // TODO: figure out why TypeScript is not recognizing the method signature
         const result = Papa.parse(text, {
             header: true,
             skipEmptyLines: true,
             delimiter: ",",
-            skipFirstNLines: 1,
         });
 
         if (result.errors.length) {
-            const msg = '';
+            var msg = '';
             result.errors.forEach((error) => {
             msg += error.message + '\n';
             });
