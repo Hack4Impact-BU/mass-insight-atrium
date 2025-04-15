@@ -25,12 +25,19 @@ export default function Upload() {
               variant="body1"
               className="text-gray-600 mb-6 text-center"
             >
-              Import the Zoom Attendance Report as a .csv file to generate insights and compare event reports.
+              Import the Zoom Attendance Report as a .csv file to generate
+              insights and compare event reports.
             </Typography>
           </div>
-
+          {error && error}
           <div className="relative mt-10">
-            <UploadFileButton file={file} setFile={setFile} setFileData={setFileData} setLoading={setLoading} setError={setError} />
+            <UploadFileButton
+              file={file}
+              setFile={setFile}
+              setFileData={setFileData}
+              setLoading={setLoading}
+              setError={setError}
+            />
           </div>
 
           <div>
@@ -42,7 +49,8 @@ export default function Upload() {
                 variant="body2"
                 className="text-gray-600 max-w-4xl text-center"
               >
-                Please do not change the file formatting or column headers from the original Zoom Attendance Report.
+                Please do not change the file formatting or column headers from
+                the original Zoom Attendance Report.
               </Typography>
             </div>
 
@@ -66,11 +74,9 @@ export default function Upload() {
                   redirect("/events/report-attendance/preview");
                 }}
               >
-                  <Typography className="normal-case p-3">
-                    {
-                      loading ? "Parsing file..." : "Next"
-                    }
-                  </Typography>
+                <Typography className="normal-case p-3">
+                  {loading ? "Parsing file..." : "Next"}
+                </Typography>
               </Button>
             </div>
           </div>

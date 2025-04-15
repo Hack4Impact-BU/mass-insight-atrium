@@ -20,7 +20,7 @@ export default function Create() {
       <Button
         onClick={() => {
           setMeetingId(meeting);
-          router.push("events/report-attendance/upload");
+          router.push("/events/report-attendance/upload");
         }}
       >
         Next

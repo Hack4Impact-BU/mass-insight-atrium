@@ -31,25 +31,29 @@ export default function Preview() {
     title: key.charAt(0) + key.slice(1),
     width: 150,
   }));
-
   const uploadToSupabase = async () => {
     for (let i = 0; i < fileData.length; i++) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("invitees")
         .select("meeting_id, email_address")
-        .eq(meetingId, fileData[i]["User Email"])
-        .single();
+        .match({ meeting_id: 6, email_address: "johnsmith123@gmail.com" });
       if (data) {
+        setError(null);
         await supabase
           .from("invitees")
           .update({
             status: "PARTICIPATED",
           })
-          .eq(meetingId, fileData[i]["User Email"]);
+          .match({
+            meeting_id: meetingId,
+            email_address: fileData[i]["User Email"],
+          });
+      }
+      if (error) {
+        setError(error.message);
       }
     }
   };
-
   return (
     <>
       <div className="w-full">
@@ -58,7 +62,7 @@ export default function Preview() {
           <Typography variant="h4" className="font-extrabold mb-2">
             Review Attendance Data
           </Typography>
-
+          {error && error}
           {/* Spreadsheet Section */}
           <div className="flex flex-col items-center gap-10 mt-10">
             <div className="overflow-auto border border-gray-300 rounded-lg">
