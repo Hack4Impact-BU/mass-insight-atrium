@@ -1,72 +1,76 @@
 "use client"
 import * as React from 'react';
-import { BarChart } from '@mui/x-charts/BarChart';
-import { Gauge } from '@mui/x-charts/Gauge';
-import { PieChart } from '@mui/x-charts/PieChart';
-import { getNumOfAttendees } from '../../utils/meetingStats/getAttendees';
-import { getNumOfStudentsPerSchool } from '../../utils/meetingStats/getSchool';
-import { getNumOfInvitedRatio } from '../../utils/meetingStats/getInvited';
-import { meetingData, userData } from '../../utils/meetingStats/testData';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { OverviewType, EventType, StudentType } from './types';
+import { OverviewSection } from './components/OverviewSection';
+import { UpcomingEventsSection } from './components/UpcomingEventsSection';
+import { StudentTableSection } from './components/StudentTableSection';
+import { DashboardService } from './services/dashboardService';
+
+const dashboardService = new DashboardService();
 
 const Page: React.FC = () => {
-    const meetingID = "meeting1"
-    const attendeesNum = getNumOfAttendees(meetingID, meetingData);
-    const schoolInfo = getNumOfStudentsPerSchool(meetingID, meetingData, userData);
-    const getInvited = getNumOfInvitedRatio(meetingID, meetingData);
+    const [overview, setOverview] = useState<OverviewType | null>(null);
+    const [upcomingEvents, setUpcomingEvents] = useState<EventType[]>([]);
+    const [studentData, setStudentData] = useState<StudentType[]>([]);
+    const [timeRange, setTimeRange] = useState<{ start: Date; end: Date }>({
+        start: new Date(new Date().setDate(new Date().getDate() - 30)),
+        end: new Date()
+    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const chartData = Object.entries(schoolInfo).map(([key, value], index) => ({
-        id: index,
-        value: value,
-        label: "School "+key,
-      }));
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const data = await dashboardService.fetchDashboardData(timeRange);
+                setOverview(data.overview);
+                setUpcomingEvents(data.upcomingEvents);
+                setStudentData(data.studentData);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [timeRange]);
 
-return (
-    <div>
-        <div className="p-10">
-            <div className="border border-[#0D99FF] bg-[#E0F3FF]">
-                <p className="ml-10 text-3xl font-semibold mt-6 text-[#022C4D]">Overview</p>
-                <p className='text-sm text-[#929292] ml-10 mt-1'>For meetingID: {meetingID}</p>
-                <div className='flex flex-wrap justify-center'>
-                    <div className="border-r-2 border-r-[#0D99FF] mt-4 mb-4 p-6 text-center w-2/6">
-                        <p className='text-lg text-[#006EB6] font-medium'>Attendee Attendance</p>
-                        <BarChart
-                            series={[
-                                { data: [attendeesNum.length] },
-                            ]}
-                            height={200}
-                            xAxis={[{ data: [meetingID], scaleType: 'band' }]}
-                            margin={{ top: 30, bottom: 20, left: 40, right: 10 }}
-                        />
-                    </div>
+    if (error) {
+        return (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography color="error" variant="h6">{error}</Typography>
+                <Button 
+                    variant="contained" 
+                    sx={{ mt: 2 }}
+                    onClick={() => window.location.reload()}
+                >
+                    Retry
+                </Button>
+            </Box>
+        );
+    }
 
-                    <div className="border-r-2 border-r-[#0D99FF] mt-4 mb-4 p-6 text-center w-1/6">
-                        <p className='text-lg text-[#006EB6] font-medium'>Total Registrations</p>
-                        <div>
-                            <p className='text-4xl font-medium mt-24'>{getInvited.length}</p>
-                        </div>
-                    </div>
-                
-                    <div className="border-r-2 border-r-[#0D99FF] mt-4 mb-4 p-6 text-center w-1/6">
-                        <p className='text-lg text-[#006EB6] font-medium'>Attendee Retention - %</p>
-                        <div className='flex justify-center mt-10'><Gauge width={150} height={150} value={attendeesNum.length/getInvited.length*100} /></div>
-                    </div>
-                    
-                    <div className="mt-4 mb-4 p-6 text-center 2/6">
-                        <p className='text-lg text-[#006EB6] font-medium'>Participation By School</p>
-                        <div className='mt-4'>
-                            <PieChart
-                                series={[{data: chartData}]}
-                                width={400}
-                                height={150}
-                                />
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-    </div>
-  );
+    return (
+        <Box sx={{ p: { xs: 1, md: 4 }, maxWidth: 1500, mx: 'auto', bgcolor: '#f7fafd', minHeight: '100vh' }}>
+            <Typography variant="h4" fontWeight={800} mb={4} color="primary.main">Executive Dashboard</Typography>
+            {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                    <CircularProgress />
+                </Box>
+            ) : (
+                <>
+                    <OverviewSection overview={overview} onTimeRangeChange={setTimeRange} />
+                    <UpcomingEventsSection events={upcomingEvents} />
+                    <StudentTableSection students={studentData} />
+                </>
+            )}
+        </Box>
+    );
 };
 
 export default Page;
