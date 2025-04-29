@@ -1,10 +1,10 @@
 import { Inter } from "next/font/google";
+import "./globals.css";
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
-import "./globals.css";
-import { Suspense } from "react";
 import StoreProvider from "./StoreProvider";
+import AuthProvider from "./components/AuthProvider";
 import Navbar from "../components/Navbar";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -26,24 +26,24 @@ const inter = Inter({
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`bg-background text-foreground ${inter.className}`}>
-        <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-            <StoreProvider>
-              <Suspense>
+        <StoreProvider>
+          <AppRouterCacheProvider>
+            <ThemeProvider theme={theme}>
+              <AuthProvider>
                 <main className="min-h-screen max-h-screen min-w-full max-w-full">
-                  <Navbar></Navbar>
+                  <Navbar />
                   {children}
                 </main>
-              </Suspense>
-            </StoreProvider>
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </AppRouterCacheProvider>
+        </StoreProvider>
       </body>
     </html>
   );
