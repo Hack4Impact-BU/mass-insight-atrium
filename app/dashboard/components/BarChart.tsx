@@ -5,14 +5,16 @@ import { BarChart as MuiBarChart } from '@mui/x-charts/BarChart';
 export interface BarChartData {
     label: string;
     value: number;
+    description?: string;
 }
 
 export interface BarChartProps {
     data: BarChartData[];
     title?: string;
+    valueLabel?: string;
 }
 
-export const BarChart: React.FC<BarChartProps> = ({ data, title }) => {
+export const BarChart: React.FC<BarChartProps> = ({ data, title, valueLabel = 'Count' }) => {
     if (!data || data.length === 0) {
         return (
             <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -36,19 +38,24 @@ export const BarChart: React.FC<BarChartProps> = ({ data, title }) => {
                     series={[
                         {
                             data: data.map(item => item.value),
-                            label: 'Attendees',
+                            label: valueLabel,
                             color: '#00bcd4',
                             valueFormatter: (value) => {
-                                const matchingItem = data.find(item => item.value === value);
-                                return matchingItem ? `${matchingItem.label}: ${value} attendees` : `${value} attendees`;
+                                const item = data.find(d => d.value === value);
+                                if (!item) return `${value}`;
+                                return item.description 
+                                    ? `${item.label}: ${value} (${item.description})`
+                                    : `${item.label}: ${value}`;
                             }
                         }
                     ]}
                     xAxis={[{
-                        data: data.map((_, index) => `Event ${index + 1}`),
+                        data: data.map(item => item.label),
                         scaleType: 'band',
                         tickLabelStyle: {
-                            fontSize: 12
+                            fontSize: 12,
+                            angle: data.length > 5 ? 315 : 0,
+                            textAnchor: data.length > 5 ? 'end' : 'middle',
                         }
                     }]}
                     yAxis={[{
@@ -57,7 +64,12 @@ export const BarChart: React.FC<BarChartProps> = ({ data, title }) => {
                         tickNumber: 5
                     }]}
                     height={300}
-                    margin={{ left: 60, right: 20, top: 20, bottom: 40 }}
+                    margin={{ 
+                        left: 60, 
+                        right: 20, 
+                        top: 20, 
+                        bottom: data.length > 5 ? 80 : 40 
+                    }}
                     slotProps={{
                         legend: {
                             hidden: true

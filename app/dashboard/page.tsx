@@ -18,8 +18,17 @@ const Page: React.FC = () => {
         start: new Date(new Date().setDate(new Date().getDate() - 30)),
         end: new Date()
     });
+    const [selectedTimeFilter, setSelectedTimeFilter] = useState<string>('month');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const handleTimeRangeChange = (range: { start: Date; end: Date }) => {
+        setTimeRange(range);
+    };
+
+    const handleSelectedChange = (selected: string) => {
+        setSelectedTimeFilter(selected);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -64,7 +73,12 @@ const Page: React.FC = () => {
                 </Box>
             ) : (
                 <>
-                    <OverviewSection overview={overview} onTimeRangeChange={setTimeRange} />
+                    <OverviewSection 
+                        overview={overview} 
+                        onTimeRangeChange={handleTimeRangeChange}
+                        selectedTimeFilter={selectedTimeFilter}
+                        onSelectedChange={handleSelectedChange}
+                    />
                     <UpcomingEventsSection events={upcomingEvents} />
                     <StudentTableSection students={studentData} />
                 </>

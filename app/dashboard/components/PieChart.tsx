@@ -41,8 +41,6 @@ export const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
                         {
                             data: chartData,
                             highlightScope: { faded: 'global', highlighted: 'item' },
-                            arcLabel: (item) => `${item.value}`,
-                            arcLabelMinAngle: 45,
                             color: '#00bcd4',
                             valueFormatter: (item) => {
                                 const percentage = ((item.value / total) * 100).toFixed(1);
@@ -55,13 +53,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
                     margin={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     slotProps={{
                         legend: {
-                            direction: 'row',
-                            position: { vertical: 'bottom', horizontal: 'middle' },
-                            padding: 0,
-                            itemMarkWidth: 10,
-                            itemMarkHeight: 10,
-                            markGap: 5,
-                            itemGap: 15,
+                            hidden: true
                         }
                     }}
                 />

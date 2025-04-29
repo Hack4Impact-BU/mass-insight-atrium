@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Card, CardContent, Typography, Grid, IconButton, Tooltip } from '@mui/material';
-import { Download as DownloadIcon } from '@mui/icons-material';
+import { Download as DownloadIcon, People as PeopleIcon, EventAvailable as EventAvailableIcon, TrendingUp as TrendingUpIcon } from '@mui/icons-material';
 import { BarChart } from './BarChart';
 import { PieChart } from './PieChart';
 import { Gauge } from '@mui/x-charts/Gauge';
@@ -15,9 +15,11 @@ import { DashboardService } from '../services/dashboardService';
 interface OverviewSectionProps {
     overview: OverviewType | null;
     onTimeRangeChange: (range: { start: Date; end: Date }) => void;
+    selectedTimeFilter: string;
+    onSelectedChange: (selected: string) => void;
 }
 
-export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTimeRangeChange }) => {
+export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTimeRangeChange, selectedTimeFilter, onSelectedChange }) => {
     if (!overview) return null;
 
     const [isExporting, setIsExporting] = useState(false);
@@ -88,27 +90,111 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
                             <DownloadIcon />
                         </IconButton>
                     </Tooltip>
-                    <TimeFilter onTimeRangeChange={onTimeRangeChange} />
+                    <TimeFilter onTimeRangeChange={onTimeRangeChange} selected={selectedTimeFilter} onSelectedChange={onSelectedChange} />
                 </Box>
             </Box>
 
             <Grid container spacing={3}>
                 <Grid item xs={12} md={4}>
-                    <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 2, boxShadow: 1 }}>
-                        <Typography variant="subtitle1" color="text.secondary">Total Registrations</Typography>
-                        <Typography variant="h3" sx={{ mt: 1 }}>{overview.totalRegistrations}</Typography>
+                    <Box sx={{
+                        bgcolor: 'white',
+                        p: 3,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+                        transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                        '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 6px 24px 0 rgba(0,0,0,0.1)',
+                        }
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <Box sx={{
+                                bgcolor: 'primary.main',
+                                borderRadius: '12px',
+                                p: 1,
+                                mr: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <PeopleIcon sx={{ color: 'white', fontSize: 24 }} />
+                            </Box>
+                            <Typography variant="subtitle1" color="text.secondary" fontWeight={500}>
+                                Total Registrations
+                            </Typography>
+                        </Box>
+                        <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                            {overview.totalRegistrations.toLocaleString()}
+                        </Typography>
                     </Box>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                    <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 2, boxShadow: 1 }}>
-                        <Typography variant="subtitle1" color="text.secondary">Attendee Attendance</Typography>
-                        <Typography variant="h3" sx={{ mt: 1 }}>{overview.attendeeAttendance}</Typography>
+                    <Box sx={{
+                        bgcolor: 'white',
+                        p: 3,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+                        transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                        '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 6px 24px 0 rgba(0,0,0,0.1)',
+                        }
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <Box sx={{
+                                bgcolor: '#00bcd4',
+                                borderRadius: '12px',
+                                p: 1,
+                                mr: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <EventAvailableIcon sx={{ color: 'white', fontSize: 24 }} />
+                            </Box>
+                            <Typography variant="subtitle1" color="text.secondary" fontWeight={500}>
+                                Attendee Attendance
+                            </Typography>
+                        </Box>
+                        <Typography variant="h3" sx={{ fontWeight: 700, color: '#00bcd4' }}>
+                            {overview.attendeeAttendance.toLocaleString()}
+                        </Typography>
                     </Box>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                    <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 2, boxShadow: 1 }}>
-                        <Typography variant="subtitle1" color="text.secondary">Attendee Retention</Typography>
-                        <Typography variant="h3" sx={{ mt: 1 }}>{overview.attendeeRetention}%</Typography>
+                    <Box sx={{
+                        bgcolor: 'white',
+                        p: 3,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+                        transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                        '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 6px 24px 0 rgba(0,0,0,0.1)',
+                        }
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <Box sx={{
+                                bgcolor: '#4caf50',
+                                borderRadius: '12px',
+                                p: 1,
+                                mr: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <TrendingUpIcon sx={{ color: 'white', fontSize: 24 }} />
+                            </Box>
+                            <Typography variant="subtitle1" color="text.secondary" fontWeight={500}>
+                                Attendee Retention
+                            </Typography>
+                        </Box>
+                        <Typography variant="h3" sx={{ fontWeight: 700, color: '#4caf50' }}>
+                            {overview.attendeeRetention}%
+                        </Typography>
                     </Box>
                 </Grid>
                 <Grid item xs={12} md={8}>
