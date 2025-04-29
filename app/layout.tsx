@@ -4,7 +4,6 @@ import theme from "./theme";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import "./globals.css";
 import { Suspense } from "react";
-import { Provider } from "react-redux";
 import StoreProvider from "./StoreProvider";
 import Navbar from "../components/Navbar";
 

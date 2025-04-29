@@ -24,13 +24,13 @@ export default function ImportForm() {
       const selectedRow = data[parseInt(key)]; // assumed to always be on type number because of rowSelection
       for (const selectedRowKey of Object.keys(selectedRow)) {
         const normalizedKey = selectedRowKey.toLowerCase().replace(/\s+/g, "");
-        if (normalizedKey === "firstname") {
+        if (normalizedKey === "firstname" || normalizedKey === "first_name") {
           result.firstName = selectedRow[selectedRowKey];
         }
-        if (normalizedKey === "lastname") {
+        if (normalizedKey === "lastname" || normalizedKey === "last_name") {
           result.lastName = selectedRow[selectedRowKey];
         }
-        if (normalizedKey === "emailaddress") {
+        if (normalizedKey === "emailaddress" || normalizedKey == "email") {
           result.emailAddress = selectedRow[selectedRowKey];
         }
       }

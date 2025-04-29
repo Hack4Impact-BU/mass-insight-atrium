@@ -78,10 +78,24 @@ export default function Navbar() {
             </MenuItem>
             <MenuItem
               onClick={() => {
+                handleClose("/events/manage");
+              }}
+            >
+              Manage Events Created
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
                 handleClose("/emails/steps/one");
               }}
             >
               Send Emails
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleClose("/events/report-attendance/create");
+              }}
+            >
+              Create Event Attendance Report
             </MenuItem>
           </Menu>
         </div>
@@ -110,6 +124,13 @@ export default function Navbar() {
               }}
             >
               Data Entry
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleClose("/manage-reports");
+              }}
+            >
+              Manage Reports
             </MenuItem>
           </Menu>
         </div>

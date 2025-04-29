@@ -1,16 +1,20 @@
 "use client";
 
 import { Button, Typography } from "@mui/material";
-import { UploadFileButton } from "@/components/upload-file-button";
+import { UploadFileButton } from "@/components/report-attendance/UploadFileButton";
 import { redirect } from "next/navigation";
 import { useFile } from "@/utils/upload-data/file-context";
+import { useState } from "react";
 
-export default function uploadData() {
-  const { file, setFile, setFileData, addToFileList, addToFileListData } = useFile();
+export default function Upload() {
+  const { file, setFile, setFileData } = useFile();
+  const [loading, setLoading] = useState(false);
+
+  //TODO: Add message to display error
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <>
-      {/* Needs to have navbar component added */}
       <div className="w-full">
         <div className="flex flex-col items-center justify-between min-h-screen py-20 bg-gray-100 m-30 ">
           <div className="flex flex-col items-center gap-10 ">
@@ -21,13 +25,12 @@ export default function uploadData() {
               variant="body1"
               className="text-gray-600 mb-6 text-center"
             >
-              Import a .xlsx or .csv to generate insights and compare event
-              reports.
+              Import the Zoom Attendance Report as a .csv file to generate insights and compare event reports.
             </Typography>
           </div>
 
           <div className="relative mt-10">
-            <UploadFileButton file={file} setFile={setFile} setFileData={setFileData} addToFileList={addToFileList} addToFileListData={addToFileListData} />
+            <UploadFileButton file={file} setFile={setFile} setFileData={setFileData} setLoading={setLoading} setError={setError} />
           </div>
 
           <div>
@@ -39,10 +42,7 @@ export default function uploadData() {
                 variant="body2"
                 className="text-gray-600 max-w-4xl text-center"
               >
-                Please format your invitee list appropriately with distinct data
-                fields so that it may be imported more easily. Be sure to at
-                least include the fields “First Name”, “Last Name” and/or
-                “Email”.
+                Please do not change the file formatting or column headers from the original Zoom Attendance Report.
               </Typography>
             </div>
 
@@ -61,12 +61,16 @@ export default function uploadData() {
               <Button
                 variant="contained"
                 className="normal-case bg-blue-600 text-white px-6"
-                disabled={!file}
+                disabled={!file || loading}
                 onClick={() => {
-                  redirect("/view-data");
+                  redirect("/events/report-attendance/preview");
                 }}
               >
-                  <Typography className="normal-case p-3">Next</Typography>
+                  <Typography className="normal-case p-3">
+                    {
+                      loading ? "Parsing file..." : "Next"
+                    }
+                  </Typography>
               </Button>
             </div>
           </div>
