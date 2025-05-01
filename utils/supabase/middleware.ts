@@ -1,7 +1,5 @@
-// import { createServerClient } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
-import { steps } from "@/app/events/utils";
 import { createServerClient } from "@supabase/ssr";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const updateSession = async (request: NextRequest) => {
   try {
@@ -12,68 +10,45 @@ export const updateSession = async (request: NextRequest) => {
       },
     });
 
-    if (request.nextUrl.pathname === "/events/create") {
-      return NextResponse.redirect(new URL(steps[0].route, request.url));
-    }
-
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
+          getAll() {
+            return request.cookies.getAll();
           },
-          set(name: string, value: string, options: any) {
-            request.cookies.set({
-              name,
-              value,
-              ...options,
-            });
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
             response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
+              request,
             });
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-            });
-          },
-          remove(name: string, options: any) {
-            request.cookies.set({
-              name,
-              value: '',
-              ...options,
-            });
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            });
-            response.cookies.set({
-              name,
-              value: '',
-              ...options,
-            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
           },
         },
       }
     );
 
     // This will refresh session if expired - required for Server Components
-    const { data: { session } } = await supabase.auth.getSession();
+    // https://supabase.com/docs/guides/auth/server-side/nextjs
+    const user = await supabase.auth.getUser();
 
-    // If no session and trying to access protected routes, redirect to login
-    if (!session && request.nextUrl.pathname.startsWith("/protected")) {
+    // protected routes
+    // console.log(request.nextUrl.pathname);
+    if (
+      (request.nextUrl.pathname.startsWith("/protected") && user.error) ||
+      request.nextUrl.pathname.includes("error")
+    ) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // After successful login, redirect to dashboard
-    if (session && request.nextUrl.pathname === "/login") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+    // if (request.nextUrl.pathname === "/" && !user.error) {
+    //   return NextResponse.redirect(new URL("/protected", request.url));
+    // }
 
     return response;
   } catch (error) {
