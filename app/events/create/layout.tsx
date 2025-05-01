@@ -3,6 +3,7 @@ import Steps from "./components/StepperWrapper";
 import { RedirectManager } from "./RedirectManager";
 
 export default async function Layout({ children }: { children: ReactNode }) {
+  
   return (
     <RedirectManager>
       <Suspense>

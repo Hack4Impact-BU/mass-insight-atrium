@@ -43,7 +43,7 @@ export default function Navbar() {
     <div className="flex justify-center">
       <Stack direction="row" spacing={15}>
         <div>
-          <Button onClick={() => router.push("/")}>Dashboard</Button>
+          <Button onClick={() => router.push("/dashboard")}>Dashboard</Button>
           {pathname === "/" && <div className="h-[2px] bg-red-600"></div>}
         </div>
         <div>
@@ -71,7 +71,7 @@ export default function Navbar() {
           >
             <MenuItem
               onClick={() => {
-                handleClose("/events/create");
+                handleClose("/events/create/start");
               }}
             >
               Create Event
