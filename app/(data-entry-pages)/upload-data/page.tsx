@@ -2,10 +2,11 @@
 
 import { Button, Typography } from "@mui/material";
 import { UploadFileButton } from "@/components/upload-file-button";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useFile } from "@/utils/upload-data/file-context";
 
 export default function uploadData() {
+  const router = useRouter();
   const { file, setFile, setFileData, addToFileList, addToFileListData } = useFile();
 
   return (
@@ -39,10 +40,9 @@ export default function uploadData() {
                 variant="body2"
                 className="text-gray-600 max-w-4xl text-center"
               >
-                Please format your invitee list appropriately with distinct data
-                fields so that it may be imported more easily. Be sure to at
-                least include the fields “First Name”, “Last Name” and/or
-                “Email”.
+                Please ensure your spreadsheet includes all required fields: First Name, Last Name, ID, 
+                Date of Birth (Excel format), Email, Role Profile, Race/Ethnicity, State, District Name/ID, 
+                School Name/ID, Course, and Grade Level information.
               </Typography>
             </div>
 
@@ -62,9 +62,7 @@ export default function uploadData() {
                 variant="contained"
                 className="normal-case bg-blue-600 text-white px-6"
                 disabled={!file}
-                onClick={() => {
-                  redirect("/view-data");
-                }}
+                onClick={() => router.push("/view-data")}
               >
                   <Typography className="normal-case p-3">Next</Typography>
               </Button>

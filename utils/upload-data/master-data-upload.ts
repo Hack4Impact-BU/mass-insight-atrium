@@ -103,13 +103,20 @@ export const uploadDataSheeToSupabase = async (data: RowData[]) => {
       schoolMap.set(row.school_name, school_id);
     }
 
+    // Convert date_of_birth to number if it's a numeric string
+    const dateOfBirthRaw = row.date_of_birth && !isNaN(Number(row.date_of_birth)) 
+      ? Number(row.date_of_birth) 
+      : null;
+
+    console.log(`Processing date for ID ${row.id}: ${row.date_of_birth} -> ${dateOfBirthRaw}`);
+
     const { error: personError } = await supabase.from("people").upsert(
       [
         {
           id: row.id,
           first_name: row.first_name,
           last_name: row.last_name,
-          date_of_birth: row.date_of_birth,
+          date_of_birth_raw: dateOfBirthRaw,
           email: row.email,
           role_profile: row.role_profile,
           race_ethnicity: row.race_ethnicity,
