@@ -26,14 +26,20 @@ export type UploadFileButtonProps = {
   setError: (error: string | null) => void;
 };
 
-const COLUMNS = ["Name(Original Name)","User Email","Join Time","Leave Time","Duration (Minutes)"]
+const COLUMNS = [
+  "Name(Original Name)",
+  "User Email",
+  "Join Time",
+  "Leave Time",
+  "Duration (Minutes)",
+];
 
 export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
   file,
   setFile,
   setFileData,
   setLoading,
-setError,
+  setError,
 }) => {
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -42,45 +48,41 @@ setError,
     setLoading(true);
     setError(null);
     try {
-        if (!uploadedFile) {
-            throw new Error("No file uploaded.");
-        }
+      if (!uploadedFile) {
+        throw new Error("No file uploaded.");
+      }
+      if (uploadedFile.type !== "text/csv" && uploadedFile.type !== "application/vnd.ms-excel") {
+        throw new Error("File must be a CSV file.");
+      }
 
-        if (uploadedFile.type !== "text/csv") {
-            throw new Error("File must be a CSV file.");
-        }
+      const text = await uploadedFile.text();
 
-        const text = await uploadedFile.text();
+      const result = Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        delimiter: ",",
+        comments: 'Meeting ID',
+      });
+      if (result.errors.length) {
+        var msg = result.errors[0].message;        
+        throw new Error(msg);
+      }
 
-        const result = Papa.parse(text, {
-            header: true,
-            skipEmptyLines: true,
-            delimiter: ",",
-        });
+      const parsedData = result.data as Object[];
+      const columns = Object.keys(parsedData[0]);
 
-        if (result.errors.length) {
-            var msg = '';
-            result.errors.forEach((error) => {
-            msg += error.message + '\n';
-            });
-            throw new Error(msg);
-        }
-
-        const parsedData = result.data as Object[];
-        const columns = Object.keys(parsedData[0]);
-
-        if (!COLUMNS.every(col => columns.includes(col))) {
-            throw new Error("File columns do not match the required format.");
-        }
-        setFile(uploadedFile);
-        setFileData(parsedData);
-        setLoading(false);
-        setError(null);
+      if (!COLUMNS.every((col) => columns.includes(col))) {
+        throw new Error("File columns do not match the required format.");
+      }
+      setFile(uploadedFile);
+      setFileData(parsedData);
+      setLoading(false);
+      setError(null);
     } catch (error: any) {
-        setFile(null);
-        setFileData([]);
-        setLoading(false);
-        setError(error.message);
+      setFile(null);
+      setFileData([]);
+      setLoading(false);
+      setError(error.message);
     }
   };
 

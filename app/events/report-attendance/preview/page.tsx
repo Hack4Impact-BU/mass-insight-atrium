@@ -33,7 +33,6 @@ export default function Preview() {
     title: key.charAt(0) + key.slice(1),
     width: 150,
   }));
-
   const uploadToSupabase = async () => {
     setLoading(true);
     setError(null);
@@ -60,7 +59,6 @@ export default function Preview() {
       setLoading(false);
     }
   };
-
   return (
     <>
       <div className="w-full">
@@ -69,7 +67,7 @@ export default function Preview() {
           <Typography variant="h4" className="font-extrabold mb-2">
             Review Attendance Data
           </Typography>
-
+          {error && error}
           {/* Spreadsheet Section */}
           <div className="flex flex-col items-center gap-10 mt-10">
             <div className="overflow-auto border border-gray-300 rounded-lg">
