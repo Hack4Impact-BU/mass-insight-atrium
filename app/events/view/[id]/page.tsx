@@ -1,15 +1,14 @@
 "use client";
 import { useParams } from "next/navigation";
-import { HotTable } from "@handsontable/react-wrapper";
-import "handsontable/dist/handsontable.full.min.css";
+import { Box, Container } from "@mui/material";
 import { Database } from "@/utils/supabase/types";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import {
-  MaterialReactTable,
-  useMaterialReactTable,
-} from "material-react-table";
+import { MaterialReactTable, useMaterialReactTable } from "material-react-table";
+import { EventOverview } from "./components/EventOverview";
+
 const supabase = createClient();
+
 export default function Page() {
   const params = useParams<{ id: string }>();
   const [inviteeData, setInviteeData] = useState<
@@ -22,6 +21,7 @@ export default function Page() {
       }[]
     | undefined
   >([]);
+
   const getColumns = (
     inviteeData:
       | {
@@ -42,18 +42,17 @@ export default function Page() {
       const row = Object.keys(inviteeData[0]);
       row.map((value) => {
         columns.push({
-          header: value,
+          header: value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
           accessorKey: value,
           filterVariant: "text",
         });
       });
       return columns;
     } else {
-      console.log("reached");
       return [];
     }
   };
-  const columns = getColumns(inviteeData);
+
   useEffect(() => {
     async function getMeetings() {
       const { data } = await supabase
@@ -68,19 +67,28 @@ export default function Page() {
       );
     }
     getMeetings();
-  }, []);
-  console.log(columns.length);
+  }, [params.id]);
+
+  const columns = getColumns(inviteeData);
   const table = useMaterialReactTable({
     data: inviteeData ? inviteeData : [],
     columns: columns,
     enableRowSelection: true,
     enableBatchRowSelection: true,
+    initialState: {
+      density: 'compact',
+      sorting: [{ id: 'status', desc: false }],
+    },
   });
+
   return (
-    <>
-      {inviteeData !== undefined && inviteeData && (
-        <MaterialReactTable table={table}></MaterialReactTable>
-      )}
-    </>
+    <Container maxWidth="xl">
+      <EventOverview meetingId={params.id} />
+      <Box sx={{ mt: 2 }}>
+        {inviteeData !== undefined && inviteeData && (
+          <MaterialReactTable table={table} />
+        )}
+      </Box>
+    </Container>
   );
 }

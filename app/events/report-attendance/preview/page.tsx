@@ -3,13 +3,13 @@
 
 import { useFile } from "@/utils/upload-data/file-context";
 import { useState } from "react";
-import { Typography, Button } from "@mui/material";
+import { Typography, Button, CircularProgress, Alert, Snackbar } from "@mui/material";
 
 import { HotTable } from "@handsontable/react-wrapper";
 import "handsontable/dist/handsontable.full.min.css";
 
 import { registerAllModules } from "handsontable/registry";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 // Register all Handsontable modules (including filters)
 registerAllModules();
@@ -17,8 +17,10 @@ registerAllModules();
 export default function Preview() {
   const { fileData, meetingId } = useFile();
   const supabase = createClient();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   if (!fileData || fileData.length === 0) {
     return <p className="text-center mt-10">No data to display</p>;
@@ -33,20 +35,29 @@ export default function Preview() {
   }));
 
   const uploadToSupabase = async () => {
-    for (let i = 0; i < fileData.length; i++) {
-      const { data } = await supabase
+    setLoading(true);
+    setError(null);
+    try {
+      // First, get all attendees from the file
+      const attendeeEmails = fileData.map(row => row["User Email"]);
+      
+      // Update all matching invitees to PARTICIPATED status
+      const { error: updateError } = await supabase
         .from("invitees")
-        .select("meeting_id, email_address")
-        .eq(meetingId, fileData[i]["User Email"])
-        .single();
-      if (data) {
-        await supabase
-          .from("invitees")
-          .update({
-            status: "PARTICIPATED",
-          })
-          .eq(meetingId, fileData[i]["User Email"]);
+        .update({ status: "PARTICIPATED" })
+        .eq("meeting_id", parseInt(meetingId))
+        .in("email_address", attendeeEmails);
+
+      if (updateError) {
+        throw updateError;
       }
+
+      setSuccess(true);
+    } catch (err) {
+      console.error("Upload error:", err);
+      setError(err instanceof Error ? err.message : "Failed to update attendance");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,27 +102,63 @@ export default function Preview() {
           {/* Navigation Buttons */}
           <div className="flex justify-between w-full max-w-4xl mt-5">
             <Button
-              className="text-blue-600"
               variant="outlined"
-              onClick={() => {
-                redirect("/events/report-attendance/upload");
-              }}
+              onClick={() => router.push("/events/report-attendance/upload")}
+              disabled={loading}
             >
               <Typography className="normal-case p-3">Back</Typography>
             </Button>
 
             <Button
               variant="contained"
-              type="submit"
-              className="normal-case bg-blue-600 text-white px-6"
-              disabled={!fileData}
               onClick={uploadToSupabase}
+              disabled={!fileData || loading}
+              sx={{ position: 'relative' }}
             >
-              <Typography className="normal-case p-3">Upload</Typography>
+              <Typography className="normal-case p-3">
+                {loading ? (
+                  <>
+                    <CircularProgress
+                      size={24}
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        marginTop: '-12px',
+                        marginLeft: '-12px',
+                      }}
+                    />
+                    Updating...
+                  </>
+                ) : (
+                  'Upload'
+                )}
+              </Typography>
             </Button>
           </div>
         </div>
       </div>
+
+      <Snackbar 
+        open={!!error} 
+        autoHideDuration={6000} 
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar 
+        open={success} 
+        autoHideDuration={2000}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success">
+          Attendance updated successfully!
+        </Alert>
+      </Snackbar>
     </>
   );
 }

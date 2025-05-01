@@ -144,6 +144,9 @@ export type Database = {
           role_profile: string | null
           school_id: number | null
           state_work: string | null
+          content_area: string | null
+          sy2024_25_course: string | null
+          sy2024_25_grade_level: string | null
         }
         Insert: {
           date_of_birth?: string | null
@@ -156,6 +159,9 @@ export type Database = {
           role_profile?: string | null
           school_id?: number | null
           state_work?: string | null
+          content_area?: string | null
+          sy2024_25_course?: string | null
+          sy2024_25_grade_level?: string | null
         }
         Update: {
           date_of_birth?: string | null
@@ -168,6 +174,9 @@ export type Database = {
           role_profile?: string | null
           school_id?: number | null
           state_work?: string | null
+          content_area?: string | null
+          sy2024_25_course?: string | null
+          sy2024_25_grade_level?: string | null
         }
         Relationships: [
           {

@@ -14,6 +14,12 @@ import {
   Radio,
   RadioGroup,
   TextField,
+  Paper,
+  Box,
+  Typography,
+  Divider,
+  Stack,
+  CircularProgress,
 } from "@mui/material";
 import TimezoneSelect from "./TimezoneSelect";
 import { redirect, usePathname, useRouter } from "next/navigation";
@@ -26,7 +32,7 @@ import {
   updateFields,
   updateModeratorFields,
 } from "@/lib/features/eventCreateForm/eventCreateFormSlice";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { scheduleFormAction } from "../../actions";
 import { steps } from "../../utils";
 import { useProgressContext } from "../RedirectManager";
@@ -35,6 +41,10 @@ export default function ScheduleEventForm() {
   const router = useRouter();
   const formData = useSelector((state: RootState) => state.eventCreateForm);
   const dispatch = useDispatch();
+  const { pageNum, prev } = useProgressContext();
+  const pathname = usePathname();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [, formAction, isPending] = useActionState(
     (_: void | null, data: FormData) => {
@@ -61,308 +71,298 @@ export default function ScheduleEventForm() {
     }
     return true;
   };
-  const pathname = usePathname();
-  const { pageNum } = useProgressContext();
-  useEffect(() => {
-    if (steps[pageNum].route != pathname) {
-      redirect(steps[pageNum].route);
+
+  const handlePrevious = () => {
+    if (pageNum > 0) {
+      prev();
+      router.push(steps[pageNum - 1].route);
     }
-  }, [pageNum, pathname]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const formDataObj = new FormData(e.target as HTMLFormElement);
+      await scheduleFormAction(formData);
+      router.push("/events/create/confirm");
+    } catch (error) {
+      setSubmitError("Failed to schedule event. Please try again.");
+      console.error("Form submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <form className="mt-5" action={formAction}>
-        <h1 className="text-center text-3xl mb-5">Schedule your event</h1>
-        <div className="flex flex-col gap-5">
-          <TextField
-            required
-            label="Event Name"
-            name="event-name"
-            id="event-name"
-            variant="filled"
-            placeholder="Type a descriptive name for your event here"
-            defaultValue={formData.meetingName}
-          />
-          <div className="flex gap-5 justify-center">
-            <DateTimePicker
-              label="Start Date"
-              name="start-date"
-              defaultValue={dayjs(formData.startDate)}
-            ></DateTimePicker>
-            <DateTimePicker
-              label="End Date"
-              defaultValue={dayjs(formData.endDate)}
-            ></DateTimePicker>
-            <TimezoneSelect />
-          </div>
-
-          <hr className="border-2"></hr>
-          <h3 className="text-xl text-center">Event Details</h3>
-          <div className="flex justify-center items-center gap-5">
-            <FormControl>
-              <FormLabel>Location</FormLabel>
-              <RadioGroup
-                id="location"
-                name="location"
-                row
-                defaultValue={formData.locationType}
-              >
-                <FormControlLabel
-                  value="online"
-                  label="Online"
-                  control={
-                    <Radio
-                      onClick={() =>
-                        dispatch(updateFields({ locationType: "online" }))
-                      }
-                    ></Radio>
-                  }
-                ></FormControlLabel>
-                <FormControlLabel
-                  value="inperson"
-                  label="In-person"
-                  control={
-                    <Radio
-                      onClick={() =>
-                        dispatch(updateFields({ locationType: "inperson" }))
-                      }
-                    ></Radio>
-                  }
-                ></FormControlLabel>
-                <FormControlLabel
-                  value="both"
-                  label="Both"
-                  control={
-                    <Radio
-                      onClick={() =>
-                        dispatch(updateFields({ locationType: "both" }))
-                      }
-                    ></Radio>
-                  }
-                ></FormControlLabel>
-              </RadioGroup>
-            </FormControl>
-            <div className="flex flex-col gap-5">
-              {(formData.locationType == "online" ||
-                formData.locationType == "both") && (
-                <TextField
-                  required
-                  label="Event Link"
-                  name="meeting-link"
-                  id="meeting-link"
-                  variant="filled"
-                  placeholder={"Link to the event"}
-                  defaultValue={formData.meetingLink}
-                />
-              )}
-              {(formData.locationType == "inperson" ||
-                formData.locationType == "both") && (
-                <TextField
-                  required
-                  label="Event Address"
-                  variant="filled"
-                  id="meeting-address"
-                  name="meeting-address"
-                  placeholder={"Address to the event"}
-                  defaultValue={formData.meetingAddress}
-                />
-              )}
-            </div>
-          </div>
-          <div className="flex justify-center gap-3">
-            <TextField
-              sx={{ width: 1 / 2 }}
-              label="Description"
-              multiline
-              minRows={5}
-              required
-              defaultValue={formData.description}
-              name="description"
-              id="description"
-              variant="outlined"
-              placeholder="Type a descriptive description of your event here"
-            ></TextField>
-            <TextField
-              sx={{ width: 1 / 2 }}
-              label="Meeting Details"
-              multiline
-              minRows={5}
-              required
-              defaultValue={formData.meetingDetails}
-              name="meeting-details"
-              id="meeting-details"
-              variant="outlined"
-              placeholder="Type a descriptive description of your event here"
-            ></TextField>
-          </div>
-          <div>
-            <h3 className="text-center">Invitees</h3>
-            <div className="flex justify-center">
-              <List
-                sx={{
-                  width: "100%",
-                  maxWidth: 400,
-                  maxHeight: 400,
-                  overflow: "auto",
-                }}
-              >
-                {formData.attendees.map((value, index) => (
-                  <ListItem key={index}>
-                    {value.firstName} {value.lastName} : {value.emailAddress}
-                  </ListItem>
-                ))}
-              </List>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-center">Moderators</h3>
-            <div className="flex justify-center">
-              <Button
-                onClick={() => {
-                  dispatch(addMod());
-                }}
-              >
-                Add
-              </Button>
-              <Button
-                onClick={() => {
-                  console.log(formData.moderators.length);
-                  if (formData.moderators.length > 1) {
-                    dispatch(removeMod());
-                  }
-                }}
-              >
-                Remove
-              </Button>
-            </div>
-            <div className="flex justify-center gap-5 flex-wrap">
-              {formData.moderators.map((moderator, index) => (
-                <div key={index} className="flex flex-col gap-2">
-                  <TextField
-                    label={`Moderator ${index + 1} first name`}
-                    required
-                    value={moderator.firstName}
-                    onChange={(e) =>
-                      dispatch(
-                        updateModeratorFields({
-                          field: "firstName",
-                          value: e.currentTarget.value,
-                          index: index,
-                        })
-                      )
-                    }
-                    name={`moderator[${index}][first_name]`}
-                    id={`moderator[${index}][first_name]`}
-                    variant="outlined"
-                    placeholder="First name of moderator"
-                  ></TextField>
-                  <TextField
-                    label={`Moderator ${index + 1} last name`}
-                    required
-                    value={moderator.lastName}
-                    onChange={(e) =>
-                      dispatch(
-                        updateModeratorFields({
-                          field: "lastName",
-                          value: e.currentTarget.value,
-                          index: index,
-                        })
-                      )
-                    }
-                    name={`moderator[${index}][last_name]`}
-                    id={`moderator[${index}][last_name]`}
-                    variant="outlined"
-                    placeholder="Last Name of moderator"
-                  ></TextField>
-                  <TextField
-                    label={`Moderator ${index + 1} email`}
-                    required
-                    type="email"
-                    value={moderator.emailAddress}
-                    onChange={(e) =>
-                      dispatch(
-                        updateModeratorFields({
-                          field: "emailAddress",
-                          value: e.currentTarget.value,
-                          index: index,
-                        })
-                      )
-                    }
-                    name={`moderator[${index}][email]`}
-                    id={`moderator[${index}][email]`}
-                    variant="outlined"
-                    placeholder="Email of moderator"
-                  ></TextField>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <hr className="border-2"></hr>
-          <h2 className="text-lg text-center">Security</h2>
-          <div className="flex flex-col items-end">
-            <FormGroup>
-              <FormControlLabel
-                label="Waitlist"
-                control={
-                  <Checkbox
-                    checked={formData.waitlist}
-                    onChange={(e) =>
-                      dispatch(
-                        updateFields({ waitlist: e.currentTarget.checked })
-                      )
-                    }
-                  ></Checkbox>
-                }
-              ></FormControlLabel>
-            </FormGroup>
-            {formData.waitlist && (
+      <form className="mt-5" onSubmit={handleSubmit}>
+        <Paper elevation={3} sx={{ p: 4, maxWidth: 1200, mx: 'auto', borderRadius: 2 }}>
+          <Typography variant="h4" component="h1" align="center" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
+            Schedule your event
+          </Typography>
+          
+          <Stack spacing={4}>
+            {/* Event Name */}
+            <Box>
               <TextField
                 required
-                label="Attendee Cap"
-                variant="filled"
-                placeholder="Max number of attendees"
-                value={formData.cap}
-                onChange={(e) => {
-                  if (!Number.isNaN(e.currentTarget.value)) {
-                    if (e.currentTarget.value == "") {
-                      dispatch(updateFields({ cap: "" }));
-                    } else {
-                      if (parsableInt(e.currentTarget.value)) {
-                        dispatch(
-                          updateFields({ cap: parseInt(e.currentTarget.value) })
-                        );
-                      }
-                    }
-                  }
-                }}
+                label="Event Name"
+                name="event-name"
+                id="event-name"
+                variant="outlined"
+                fullWidth
+                placeholder="Type a descriptive name for your event here"
+                defaultValue={formData.meetingName}
+                sx={{ mb: 2 }}
               />
-            )}
-          </div>
-          <TextField
-            required
-            label="Passcode"
-            type="password"
-            variant="filled"
-            placeholder="Type a descriptive name for your event here"
-            defaultValue={formData.passcode}
-            onChange={(e) => updateFields({ passcode: e.currentTarget.value })}
-          />
-        </div>
+            </Box>
 
-        <br></br>
-        <div className="flex justify-between px-5">
+            {/* Date and Time Selection */}
+            <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>Date and Time</Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+                <DateTimePicker
+                  label="Start Date"
+                  name="start-date"
+                  defaultValue={dayjs(formData.startDate)}
+                  sx={{ flex: 1 }}
+                />
+                <DateTimePicker
+                  label="End Date"
+                  defaultValue={dayjs(formData.endDate)}
+                  sx={{ flex: 1 }}
+                />
+                <TimezoneSelect />
+              </Stack>
+            </Paper>
+
+            {/* Event Details */}
+            <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>Event Details</Typography>
+              <Stack spacing={3}>
+                <FormControl>
+                  <FormLabel>Location Type</FormLabel>
+                  <RadioGroup
+                    id="location"
+                    name="location"
+                    row
+                    defaultValue={formData.locationType}
+                    sx={{ justifyContent: 'center', gap: 2 }}
+                  >
+                    <FormControlLabel
+                      value="online"
+                      label="Online"
+                      control={
+                        <Radio
+                          onClick={() => dispatch(updateFields({ locationType: "online" }))}
+                        />
+                      }
+                    />
+                    <FormControlLabel
+                      value="inperson"
+                      label="In-person"
+                      control={
+                        <Radio
+                          onClick={() => dispatch(updateFields({ locationType: "inperson" }))}
+                        />
+                      }
+                    />
+                    <FormControlLabel
+                      value="both"
+                      label="Both"
+                      control={
+                        <Radio
+                          onClick={() => dispatch(updateFields({ locationType: "both" }))}
+                        />
+                      }
+                    />
+                  </RadioGroup>
+                </FormControl>
+
+                <Stack spacing={2}>
+                  {(formData.locationType == "online" || formData.locationType == "both") && (
+                    <TextField
+                      required
+                      label="Event Link"
+                      name="meeting-link"
+                      id="meeting-link"
+                      variant="outlined"
+                      fullWidth
+                      placeholder="Link to the event"
+                      defaultValue={formData.meetingLink}
+                    />
+                  )}
+                  {(formData.locationType == "inperson" || formData.locationType == "both") && (
+                    <TextField
+                      required
+                      label="Event Address"
+                      variant="outlined"
+                      id="meeting-address"
+                      name="meeting-address"
+                      fullWidth
+                      placeholder="Address to the event"
+                      defaultValue={formData.meetingAddress}
+                    />
+                  )}
+                </Stack>
+              </Stack>
+            </Paper>
+
+            {/* Description and Meeting Details */}
+            <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>Event Information</Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                <TextField
+                  label="Description"
+                  multiline
+                  minRows={5}
+                  required
+                  defaultValue={formData.description}
+                  name="description"
+                  id="description"
+                  variant="outlined"
+                  fullWidth
+                  placeholder="Type a descriptive description of your event here"
+                />
+                <TextField
+                  label="Meeting Details"
+                  multiline
+                  minRows={5}
+                  required
+                  defaultValue={formData.meetingDetails}
+                  name="meeting-details"
+                  id="meeting-details"
+                  variant="outlined"
+                  fullWidth
+                  placeholder="Type a descriptive description of your event here"
+                />
+              </Stack>
+            </Paper>
+
+            {/* Invitees */}
+            <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>Invitees</Typography>
+              <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+                <List>
+                  {formData.attendees.map((value, index) => (
+                    <ListItem key={index} sx={{ borderBottom: '1px solid #eee' }}>
+                      {value.firstName} {value.lastName} : {value.emailAddress}
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+            </Paper>
+
+            {/* Moderators */}
+            <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>Moderators</Typography>
+              <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+                <Button
+                  variant="contained"
+                  onClick={() => dispatch(addMod())}
+                >
+                  Add Moderator
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    if (formData.moderators.length > 1) {
+                      dispatch(removeMod());
+                    }
+                  }}
+                >
+                  Remove Moderator
+                </Button>
+              </Stack>
+              <Stack spacing={3}>
+                {formData.moderators.map((moderator, index) => (
+                  <Stack key={index} direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <TextField
+                      label={`Moderator ${index + 1} first name`}
+                      required
+                      value={moderator.firstName}
+                      onChange={(e) =>
+                        dispatch(
+                          updateModeratorFields({
+                            field: "firstName",
+                            value: e.currentTarget.value,
+                            index: index,
+                          })
+                        )
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label={`Moderator ${index + 1} last name`}
+                      required
+                      value={moderator.lastName}
+                      onChange={(e) =>
+                        dispatch(
+                          updateModeratorFields({
+                            field: "lastName",
+                            value: e.currentTarget.value,
+                            index: index,
+                          })
+                        )
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label={`Moderator ${index + 1} email`}
+                      required
+                      type="email"
+                      value={moderator.emailAddress}
+                      onChange={(e) =>
+                        dispatch(
+                          updateModeratorFields({
+                            field: "emailAddress",
+                            value: e.currentTarget.value,
+                            index: index,
+                          })
+                        )
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                ))}
+              </Stack>
+            </Paper>
+          </Stack>
+        </Paper>
+
+        {submitError && (
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography color="error">{submitError}</Typography>
+          </Box>
+        )}
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, px: 5 }}>
           <Button
             type="button"
-            variant="contained"
-            onClick={() => router.push("/events/create/import")}
-            loading={isPending}
+            variant="outlined"
+            onClick={handlePrevious}
+            disabled={isSubmitting}
+            sx={{ minWidth: 120 }}
           >
             Previous
           </Button>
-          <Button type="submit" variant="contained" loading={isPending}>
-            Schedule Event
+          <Button 
+            type="submit" 
+            variant="contained" 
+            disabled={isSubmitting}
+            sx={{ minWidth: 120 }}
+          >
+            {isSubmitting ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={20} color="inherit" />
+                Scheduling...
+              </Box>
+            ) : 'Schedule Event'}
           </Button>
-        </div>
+        </Box>
       </form>
     </LocalizationProvider>
   );
