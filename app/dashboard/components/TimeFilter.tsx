@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Box, 
     ToggleButton, 
@@ -9,15 +9,24 @@ import {
     DialogTitle, 
     DialogContent, 
     DialogActions, 
-    Button 
+    Button,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Checkbox,
+    ListItemText,
+    OutlinedInput
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
+import { createClient } from '@/utils/supabase/client';
+import { Database } from '@/utils/supabase/types';
 
 export interface TimeFilterProps {
-    onTimeRangeChange: (range: { start: Date; end: Date }) => void;
+    onTimeRangeChange: (range: { start: Date; end: Date; selectedMeetings?: number[] }) => void;
     selected: string;
     onSelectedChange: (selected: string) => void;
 }
@@ -26,6 +35,20 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({ onTimeRangeChange, selec
     const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
     const [customStartDate, setCustomStartDate] = useState<Dayjs | null>(dayjs());
     const [customEndDate, setCustomEndDate] = useState<Dayjs | null>(dayjs());
+    const [meetings, setMeetings] = useState<Database['public']['Tables']['meetings']['Row'][]>([]);
+    const [selectedMeetings, setSelectedMeetings] = useState<number[]>([]);
+
+    useEffect(() => {
+        const fetchMeetings = async () => {
+            const supabase = createClient();
+            const { data } = await supabase
+                .from('meetings')
+                .select()
+                .order('start_time', { ascending: false });
+            setMeetings(data || []);
+        };
+        fetchMeetings();
+    }, []);
 
     const handleTimeRangeChange = (
         _event: React.MouseEvent<HTMLElement>,
@@ -69,7 +92,8 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({ onTimeRangeChange, selec
             
             onTimeRangeChange({ 
                 start: customStartDate.toDate(), 
-                end: endDate
+                end: endDate,
+                selectedMeetings: selectedMeetings.length > 0 ? selectedMeetings : undefined
             });
             setIsCustomDialogOpen(false);
         }
@@ -105,38 +129,66 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({ onTimeRangeChange, selec
                 open={isCustomDialogOpen} 
                 onClose={() => setIsCustomDialogOpen(false)}
                 PaperProps={{
-                    sx: { width: '100%', maxWidth: 400 }
+                    sx: { width: '100%', maxWidth: 500 }
                 }}
             >
                 <DialogTitle>Select Custom Date Range</DialogTitle>
                 <DialogContent>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                            <DatePicker
-                                label="Start Date"
-                                value={customStartDate}
-                                onChange={(newValue) => setCustomStartDate(newValue)}
-                                maxDate={customEndDate || dayjs()}
-                                slotProps={{
-                                    textField: {
-                                        fullWidth: true,
-                                        variant: 'outlined'
-                                    }
-                                }}
-                            />
-                            <DatePicker
-                                label="End Date"
-                                value={customEndDate}
-                                onChange={(newValue) => setCustomEndDate(newValue)}
-                                minDate={customStartDate || undefined}
-                                maxDate={dayjs()}
-                                slotProps={{
-                                    textField: {
-                                        fullWidth: true,
-                                        variant: 'outlined'
-                                    }
-                                }}
-                            />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <DatePicker
+                                    label="Start Date"
+                                    value={customStartDate}
+                                    onChange={(newValue) => setCustomStartDate(newValue)}
+                                    maxDate={customEndDate || dayjs()}
+                                    slotProps={{
+                                        textField: {
+                                            fullWidth: true,
+                                            variant: 'outlined'
+                                        }
+                                    }}
+                                />
+                                <DatePicker
+                                    label="End Date"
+                                    value={customEndDate}
+                                    onChange={(newValue) => setCustomEndDate(newValue)}
+                                    minDate={customStartDate || undefined}
+                                    maxDate={dayjs()}
+                                    slotProps={{
+                                        textField: {
+                                            fullWidth: true,
+                                            variant: 'outlined'
+                                        }
+                                    }}
+                                />
+                            </Box>
+                            
+                            <FormControl fullWidth>
+                                <InputLabel>Select Specific Meetings (Optional)</InputLabel>
+                                <Select
+                                    multiple
+                                    value={selectedMeetings}
+                                    onChange={(e) => setSelectedMeetings(e.target.value as number[])}
+                                    input={<OutlinedInput label="Select Specific Meetings (Optional)" />}
+                                    renderValue={(selected) => {
+                                        const selectedMeetingNames = meetings
+                                            .filter(m => selected.includes(m.meeting_id))
+                                            .map(m => m.name);
+                                        return selectedMeetingNames.join(', ');
+                                    }}
+                                >
+                                    {meetings.map((meeting) => (
+                                        <MenuItem key={meeting.meeting_id} value={meeting.meeting_id}>
+                                            <Checkbox checked={selectedMeetings.includes(meeting.meeting_id)} />
+                                            <ListItemText 
+                                                primary={meeting.name}
+                                                secondary={new Date(meeting.start_time).toLocaleString()}
+                                            />
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
                         </Box>
                     </LocalizationProvider>
                 </DialogContent>

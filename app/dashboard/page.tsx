@@ -7,6 +7,7 @@ import { OverviewSection } from './components/OverviewSection';
 import { UpcomingEventsSection } from './components/UpcomingEventsSection';
 import { StudentTableSection } from './components/StudentTableSection';
 import { DashboardService } from './services/dashboardService';
+import { DashboardLogo } from './components/DashboardLogo';
 
 const dashboardService = new DashboardService();
 
@@ -66,7 +67,7 @@ const Page: React.FC = () => {
 
     return (
         <Box sx={{ p: { xs: 1, md: 4 }, maxWidth: 1500, mx: 'auto', bgcolor: '#f7fafd', minHeight: '100vh' }}>
-            <Typography variant="h4" fontWeight={800} mb={4} color="primary.main">Executive Dashboard</Typography>
+            <DashboardLogo />
             {isLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
                     <CircularProgress />

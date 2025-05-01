@@ -166,13 +166,22 @@ export class DashboardService {
                     detailedData.push({
                         meeting_name: meeting.name,
                         meeting_date: new Date(meeting.start_time).toLocaleDateString(),
+                        meeting_start_time: meeting.start_time,
+                        meeting_end_time: meeting.end_time,
                         attendee_name: `${person.first_name} ${person.last_name}`,
                         attendee_email: person.email || '',
-                        school_name: school?.name || '',
-                        district_name: district?.name || '',
+                        first_name: person.first_name,
+                        last_name: person.last_name,
+                        date_of_birth: person.date_of_birth || null,
                         role_profile: person.role_profile || '',
                         race_ethnicity: person.race_ethnicity || '',
-                        status: invitee.status // Add status to see what's happening
+                        state_work: person.state_work || '',
+                        school_name: school?.name || '',
+                        district_name: district?.name || '',
+                        content_area: (person as any).content_area || null,
+                        sy2024_25_course: (person as any).sy2024_25_course || null,
+                        sy2024_25_grade_level: (person as any).sy2024_25_grade_level || null,
+                        status: invitee.status
                     });
                 }
             });
@@ -211,7 +220,8 @@ export class DashboardService {
             return {
                 date: meeting.start_time,
                 count: meetingAttendees.length,
-                meetingName: meeting.name
+                meetingName: meeting.name,
+                meetingId: meeting.meeting_id
             };
         }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -230,10 +240,17 @@ export class DashboardService {
             attendeeRetention
         });
         
-        // Participation by school
+        // Participation metrics
         const participationBySchool: Record<string, number> = {};
-        console.log('Starting participation by school calculation');
-        console.log('Total invitees to process:', invitees.length);
+        const participationByDistrict: Record<string, number> = {};
+        const participationByState: Record<string, number> = {};
+        const participationByRole: Record<string, number> = {};
+        const participationByContentArea: Record<string, string> = {};
+        const participationByGrade: Record<number, number> = {};
+        const participationByCourse: Record<string, string> = {};
+        const participationByRace: Record<string, number> = {};
+
+        console.log('Starting participation metrics calculation');
         
         let participatedCount = 0;
         let matchedWithPersonCount = 0;
@@ -243,34 +260,57 @@ export class DashboardService {
             if (inv.status === "PARTICIPATED") {
                 participatedCount++;
                 const person = people.find(p => p.email === inv.email_address);
-                console.log('Participant details:', {
-                    inviteeEmail: inv.email_address,
-                    meetingId: inv.meeting_id,
-                    personFound: !!person,
-                    personDetails: person ? {
-                        name: `${person.first_name} ${person.last_name}`,
-                        email: person.email,
-                        schoolId: person.school_id,
-                        districtId: person.district_id,
-                        roleProfile: person.role_profile
-                    } : null
-                });
+                
                 if (person) {
                     matchedWithPersonCount++;
+
+                    // School participation
                     if (person.school_id) {
                         const school = schools.find(s => s.id === person.school_id);
                         if (school) {
                             matchedWithSchoolCount++;
                             participationBySchool[school.name] = (participationBySchool[school.name] || 0) + 1;
-                            console.log('School match found:', {
-                                personName: `${person.first_name} ${person.last_name}`,
-                                schoolName: school.name
-                            });
-                        } else {
-                            console.log('No school found for ID:', person.school_id);
                         }
-                    } else {
-                        console.log('No school ID for person:', `${person.first_name} ${person.last_name}`);
+                    }
+
+                    // District participation
+                    if (person.district_id) {
+                        const district = districts.find(d => d.id === person.district_id);
+                        if (district) {
+                            participationByDistrict[district.name] = (participationByDistrict[district.name] || 0) + 1;
+                        }
+                    }
+
+                    // State work participation
+                    if (person.state_work) {
+                        participationByState[person.state_work] = (participationByState[person.state_work] || 0) + 1;
+                    }
+
+                    // Role profile participation
+                    if (person.role_profile) {
+                        participationByRole[person.role_profile] = (participationByRole[person.role_profile] || 0) + 1;
+                    }
+
+                    // Content area participation (store as comma-separated string)
+                    if (person.content_area) {
+                        participationByContentArea[person.email] = person.content_area;
+                    }
+
+                    // Grade level participation
+                    if (person.sy2024_25_grade_level !== null) {
+                        participationByGrade[person.sy2024_25_grade_level] = 
+                            (participationByGrade[person.sy2024_25_grade_level] || 0) + 1;
+                    }
+
+                    // Course participation (store as comma-separated string)
+                    if (person.sy2024_25_course) {
+                        participationByCourse[person.email] = person.sy2024_25_course;
+                    }
+
+                    // Race/Ethnicity participation
+                    if (person.race_ethnicity) {
+                        participationByRace[person.race_ethnicity] = 
+                            (participationByRace[person.race_ethnicity] || 0) + 1;
                     }
                 }
             }
@@ -280,7 +320,9 @@ export class DashboardService {
             totalParticipated: participatedCount,
             matchedWithPerson: matchedWithPersonCount,
             matchedWithSchool: matchedWithSchoolCount,
-            schoolsFound: Object.keys(participationBySchool).length
+            schoolsFound: Object.keys(participationBySchool).length,
+            districtsFound: Object.keys(participationByDistrict).length,
+            rolesFound: Object.keys(participationByRole).length
         });
         console.log('Participation by school data:', participationBySchool);
 
@@ -297,7 +339,11 @@ export class DashboardService {
                 race_ethnicity: person.race_ethnicity || '',
                 state_work: person.state_work || '',
                 school_name: school?.name || '',
-                district_name: district?.name || ''
+                district_name: district?.name || '',
+                date_of_birth: person.date_of_birth || null,
+                content_area: person.content_area || null,
+                sy2024_25_course: person.sy2024_25_course || null,
+                sy2024_25_grade_level: person.sy2024_25_grade_level || null
             } as StudentType;
         });
 
@@ -308,6 +354,13 @@ export class DashboardService {
             attendeeAttendance,
             attendeeRetention,
             participationBySchool,
+            participationByDistrict,
+            participationByState,
+            participationByRole,
+            participationByContentArea,
+            participationByGrade,
+            participationByCourse,
+            participationByRace,
             attendanceOverTime,
             timeRange
         };

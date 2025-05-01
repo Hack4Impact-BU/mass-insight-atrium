@@ -1,14 +1,17 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, Typography, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Card, CardContent, Typography, List, ListItemText, Divider, ListItemButton } from '@mui/material';
 import { EventType } from '../types';
+import { useRouter } from 'next/navigation';
 
 interface UpcomingEventsSectionProps {
     events: EventType[];
 }
 
 export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
+    const router = useRouter();
+
     return (
         <Card elevation={3} sx={{ mb: 4 }}>
             <CardContent>
@@ -17,7 +20,14 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                     <List>
                         {events.map((event, idx) => (
                             <React.Fragment key={event.meeting_id}>
-                                <ListItem alignItems="flex-start">
+                                <ListItemButton 
+                                    onClick={() => router.push(`/events/view/${event.meeting_id}`)}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                        }
+                                    }}
+                                >
                                     <ListItemText
                                         primary={<Typography fontWeight={600}>{event.name}</Typography>}
                                         secondary={
@@ -28,7 +38,7 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                                             </>
                                         }
                                     />
-                                </ListItem>
+                                </ListItemButton>
                                 {idx < events.length - 1 && <Divider component="li" />}
                             </React.Fragment>
                         ))}

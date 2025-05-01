@@ -2,13 +2,14 @@
 
 import { Button, Typography } from "@mui/material";
 import { UploadFileButton } from "@/components/report-attendance/UploadFileButton";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useFile } from "@/utils/upload-data/file-context";
 import { useState } from "react";
 
 export default function Upload() {
   const { file, setFile, setFileData } = useFile();
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   //TODO: Add message to display error
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +49,17 @@ export default function Upload() {
 
             <div className="flex justify-between w-full max-w-4xl mt-20">
               <div className="flex gap-4">
-                <Button className="text-blue-600" variant="outlined">
+                <Button 
+                  className="text-blue-600" 
+                  variant="outlined"
+                  onClick={() => router.push("/events/report-attendance/create")}
+                >
                   <Typography className="normal-case p-3">Cancel</Typography>
                 </Button>
                 <Button
                   variant="contained"
                   className="normal-case bg-blue-400 text-white px-6"
+                  onClick={() => router.push("/events/report-attendance/create")}
                 >
                   <Typography className="normal-case p-3">Previous</Typography>
                 </Button>
@@ -62,9 +68,7 @@ export default function Upload() {
                 variant="contained"
                 className="normal-case bg-blue-600 text-white px-6"
                 disabled={!file || loading}
-                onClick={() => {
-                  redirect("/events/report-attendance/preview");
-                }}
+                onClick={() => router.push("/events/report-attendance/preview")}
               >
                   <Typography className="normal-case p-3">
                     {

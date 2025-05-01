@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Box, Card, CardContent, Typography, Grid, IconButton, Tooltip } from '@mui/material';
 import { Download as DownloadIcon, People as PeopleIcon, EventAvailable as EventAvailableIcon, TrendingUp as TrendingUpIcon } from '@mui/icons-material';
 import { BarChart } from './BarChart';
-import { PieChart } from './PieChart';
+import { PieChart, ViewType } from './PieChart';
 import { Gauge } from '@mui/x-charts/Gauge';
 import { createClient } from "@/utils/supabase/client";
 import { OverviewType, DetailedAttendanceData } from '../types';
@@ -24,6 +24,7 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
 
     const [isExporting, setIsExporting] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
+    const [pieChartView, setPieChartView] = useState<ViewType>('school');
     const supabase = createClient();
     const dashboardService = new DashboardService();
 
@@ -55,18 +56,83 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
     const attendanceData = useMemo(() => {
         if (!overview?.attendanceOverTime) return [];
         return overview.attendanceOverTime.map(item => ({
-            label: item.meetingName,
-            value: item.count
+            label: new Date(item.date).toLocaleDateString(),
+            value: item.count,
+            description: item.meetingName,
+            meetingId: item.meetingId
         }));
     }, [overview]);
 
     const participationData = useMemo(() => {
         if (!overview?.participationBySchool) return [];
-        return Object.entries(overview.participationBySchool).map(([school, value]) => ({
-            label: school,
-            value: value as number
-        }));
-    }, [overview]);
+
+        const data: Record<string, number> = {};
+
+        // Helper function to increment count
+        const incrementCount = (key: string) => {
+            data[key] = (data[key] || 0) + 1;
+        };
+
+        // Helper function to parse comma-separated values
+        const parseMultiValue = (value: string) => {
+            return value.split(',').map(v => v.trim()).filter(v => v);
+        };
+
+        // Process data based on view type
+        switch (pieChartView) {
+            case 'school':
+                Object.entries(overview.participationBySchool).forEach(([key, value]) => {
+                    data[key] = value;
+                });
+                break;
+            case 'district':
+                Object.entries(overview.participationByDistrict).forEach(([key, value]) => {
+                    data[key] = value;
+                });
+                break;
+            case 'state':
+                Object.entries(overview.participationByState).forEach(([key, value]) => {
+                    data[key] = value;
+                });
+                break;
+            case 'role':
+                Object.entries(overview.participationByRole).forEach(([key, value]) => {
+                    data[key] = value;
+                });
+                break;
+            case 'content':
+                // Parse content areas (comma-separated)
+                Object.entries(overview.participationByContentArea).forEach(([key, value]) => {
+                    const contentAreas = parseMultiValue(value);
+                    contentAreas.forEach(area => incrementCount(area));
+                });
+                break;
+            case 'grade':
+                Object.entries(overview.participationByGrade).forEach(([key, value]) => {
+                    data[`Grade ${key}`] = value;
+                });
+                break;
+            case 'course':
+                // Parse courses (comma-separated)
+                Object.entries(overview.participationByCourse).forEach(([key, value]) => {
+                    const courses = parseMultiValue(value);
+                    courses.forEach(course => incrementCount(course));
+                });
+                break;
+            case 'race':
+                Object.entries(overview.participationByRace).forEach(([key, value]) => {
+                    data[key] = value;
+                });
+                break;
+        }
+
+        return Object.entries(data)
+            .map(([label, value]) => ({
+                label,
+                value
+            }))
+            .sort((a, b) => b.value - a.value); // Sort by value in descending order
+    }, [overview, pieChartView]);
 
     const gaugeValue = overview && overview.totalRegistrations > 0 
         ? (overview.attendeeAttendance / overview.totalRegistrations) * 100 
@@ -155,7 +221,7 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
                                 <EventAvailableIcon sx={{ color: 'white', fontSize: 24 }} />
                             </Box>
                             <Typography variant="subtitle1" color="text.secondary" fontWeight={500}>
-                                Attendee Attendance
+                                Attendance
                             </Typography>
                         </Box>
                         <Typography variant="h3" sx={{ fontWeight: 700, color: '#00bcd4' }}>
@@ -209,7 +275,9 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
                     <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 2, boxShadow: 1 }}>
                         <PieChart 
                             data={participationData}
-                            title="Participation by School"
+                            title="Participation Distribution"
+                            viewType={pieChartView}
+                            onViewTypeChange={setPieChartView}
                         />
                     </Box>
                 </Grid>
