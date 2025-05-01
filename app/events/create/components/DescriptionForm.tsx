@@ -58,7 +58,7 @@ export default function DescriptionForm() {
           >
             Previous
           </Button>
-          <Button type="submit" variant="contained" loading={isPending}>
+          <Button type="submit" variant="contained" loading={isPending} disabled={isPending}>
             Next
           </Button>
         </div>

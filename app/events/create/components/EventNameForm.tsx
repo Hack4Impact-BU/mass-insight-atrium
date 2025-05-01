@@ -46,6 +46,7 @@ export default function EventNameForm() {
             type="submit"
             variant="contained"
             loading={isPending}
+            disabled={isPending || !formData.meetingName}
             // onClick={() => {dispatch(updateFields({ meetingName: "test name" })); console.log(formData)}}
           >
             Next
