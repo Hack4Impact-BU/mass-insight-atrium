@@ -36,27 +36,27 @@ export const scheduleFormAction = async (formData: EventCreateFormState) => {
 
     // Start a transaction
     const { error: meetingError, data: meetingData } = await supabase
-      .from("meetings")
-      .upsert({
-        cap: formData.cap as number,
-        description: formData.description,
-        encrypted_passcode: await bcrypt.hash(
-          formData.passcode,
-          await bcrypt.genSalt()
-        ),
+    .from("meetings")
+    .upsert({
+      cap: formData.cap as number,
+      description: formData.description,
+      encrypted_passcode: await bcrypt.hash(
+        formData.passcode,
+        await bcrypt.genSalt()
+      ),
         end_time: formData.endDate,
-        location_type: formData.locationType.toUpperCase() as
-          | "INPERSON"
-          | "ONLINE"
-          | "BOTH",
-        meeting_address: formData.meetingAddress,
-        meeting_link: formData.meetingLink,
+      location_type: formData.locationType.toUpperCase() as
+        | "INPERSON"
+        | "ONLINE"
+        | "BOTH",
+      meeting_address: formData.meetingAddress,
+      meeting_link: formData.meetingLink,
         start_time: formData.startDate,
-        waitlist: formData.waitlist,
-        name: formData.meetingName,
-        details: formData.meetingDetails,
-      })
-      .select();
+      waitlist: formData.waitlist,
+      name: formData.meetingName,
+      details: formData.meetingDetails,
+    })
+    .select();
 
     if (meetingError) {
       console.error("Meeting creation error:", meetingError);
@@ -68,15 +68,15 @@ export const scheduleFormAction = async (formData: EventCreateFormState) => {
 
     // Add attendees
     console.log("Adding attendees:", formData.attendees);
-    for (const invitee of formData.attendees) {
+  for (const invitee of formData.attendees) {
       const { error: inviteeError } = await supabase.from("invitees").upsert({
-        email_address: invitee.emailAddress,
-        first_name: invitee.firstName,
-        last_name: invitee.lastName,
-        is_moderator: false,
-        status: "INVITED",
+      email_address: invitee.emailAddress,
+      first_name: invitee.firstName,
+      last_name: invitee.lastName,
+      is_moderator: false,
+      status: "INVITED",
         meeting_id: meetingId,
-      });
+    });
 
       if (inviteeError) {
         console.error("Attendee addition error:", {
@@ -89,15 +89,15 @@ export const scheduleFormAction = async (formData: EventCreateFormState) => {
 
     // Add moderators
     console.log("Adding moderators:", formData.moderators);
-    for (const moderator of formData.moderators) {
+  for (const moderator of formData.moderators) {
       const { error: moderatorError } = await supabase.from("invitees").upsert({
-        email_address: moderator.emailAddress,
-        first_name: moderator.firstName,
-        last_name: moderator.lastName,
-        is_moderator: true,
-        status: "INVITED",
+      email_address: moderator.emailAddress,
+      first_name: moderator.firstName,
+      last_name: moderator.lastName,
+      is_moderator: true,
+      status: "INVITED",
         meeting_id: meetingId,
-      });
+    });
 
       if (moderatorError) {
         console.error("Moderator addition error:", {

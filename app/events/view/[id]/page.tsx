@@ -85,9 +85,9 @@ export default function Page() {
     <Container maxWidth="xl">
       <EventOverview meetingId={params.id} />
       <Box sx={{ mt: 2 }}>
-        {inviteeData !== undefined && inviteeData && (
+      {inviteeData !== undefined && inviteeData && (
           <MaterialReactTable table={table} />
-        )}
+      )}
       </Box>
     </Container>
   );

@@ -107,35 +107,35 @@ export default function ScheduleEventForm() {
           <Stack spacing={4}>
             {/* Event Name */}
             <Box>
-              <TextField
-                required
-                label="Event Name"
-                name="event-name"
-                id="event-name"
+          <TextField
+            required
+            label="Event Name"
+            name="event-name"
+            id="event-name"
                 variant="outlined"
                 fullWidth
-                placeholder="Type a descriptive name for your event here"
-                defaultValue={formData.meetingName}
+            placeholder="Type a descriptive name for your event here"
+            defaultValue={formData.meetingName}
                 sx={{ mb: 2 }}
-              />
+          />
             </Box>
 
             {/* Date and Time Selection */}
             <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
               <Typography variant="h6" gutterBottom>Date and Time</Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
-                <DateTimePicker
-                  label="Start Date"
-                  name="start-date"
-                  defaultValue={dayjs(formData.startDate)}
+            <DateTimePicker
+              label="Start Date"
+              name="start-date"
+              defaultValue={dayjs(formData.startDate)}
                   sx={{ flex: 1 }}
                 />
-                <DateTimePicker
-                  label="End Date"
-                  defaultValue={dayjs(formData.endDate)}
+            <DateTimePicker
+              label="End Date"
+              defaultValue={dayjs(formData.endDate)}
                   sx={{ flex: 1 }}
                 />
-                <TimezoneSelect />
+            <TimezoneSelect />
               </Stack>
             </Paper>
 
@@ -143,70 +143,70 @@ export default function ScheduleEventForm() {
             <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
               <Typography variant="h6" gutterBottom>Event Details</Typography>
               <Stack spacing={3}>
-                <FormControl>
+            <FormControl>
                   <FormLabel>Location Type</FormLabel>
-                  <RadioGroup
-                    id="location"
-                    name="location"
-                    row
-                    defaultValue={formData.locationType}
+              <RadioGroup
+                id="location"
+                name="location"
+                row
+                defaultValue={formData.locationType}
                     sx={{ justifyContent: 'center', gap: 2 }}
-                  >
-                    <FormControlLabel
-                      value="online"
-                      label="Online"
-                      control={
-                        <Radio
+              >
+                <FormControlLabel
+                  value="online"
+                  label="Online"
+                  control={
+                    <Radio
                           onClick={() => dispatch(updateFields({ locationType: "online" }))}
                         />
                       }
                     />
-                    <FormControlLabel
-                      value="inperson"
-                      label="In-person"
-                      control={
-                        <Radio
+                <FormControlLabel
+                  value="inperson"
+                  label="In-person"
+                  control={
+                    <Radio
                           onClick={() => dispatch(updateFields({ locationType: "inperson" }))}
                         />
                       }
                     />
-                    <FormControlLabel
-                      value="both"
-                      label="Both"
-                      control={
-                        <Radio
+                <FormControlLabel
+                  value="both"
+                  label="Both"
+                  control={
+                    <Radio
                           onClick={() => dispatch(updateFields({ locationType: "both" }))}
                         />
                       }
                     />
-                  </RadioGroup>
-                </FormControl>
+              </RadioGroup>
+            </FormControl>
 
                 <Stack spacing={2}>
                   {(formData.locationType == "online" || formData.locationType == "both") && (
-                    <TextField
-                      required
-                      label="Event Link"
-                      name="meeting-link"
-                      id="meeting-link"
+                <TextField
+                  required
+                  label="Event Link"
+                  name="meeting-link"
+                  id="meeting-link"
                       variant="outlined"
                       fullWidth
                       placeholder="Link to the event"
-                      defaultValue={formData.meetingLink}
-                    />
-                  )}
+                  defaultValue={formData.meetingLink}
+                />
+              )}
                   {(formData.locationType == "inperson" || formData.locationType == "both") && (
-                    <TextField
-                      required
-                      label="Event Address"
+                <TextField
+                  required
+                  label="Event Address"
                       variant="outlined"
-                      id="meeting-address"
-                      name="meeting-address"
+                  id="meeting-address"
+                  name="meeting-address"
                       fullWidth
                       placeholder="Address to the event"
-                      defaultValue={formData.meetingAddress}
-                    />
-                  )}
+                  defaultValue={formData.meetingAddress}
+                />
+              )}
                 </Stack>
               </Stack>
             </Paper>
@@ -215,29 +215,29 @@ export default function ScheduleEventForm() {
             <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
               <Typography variant="h6" gutterBottom>Event Information</Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-                <TextField
-                  label="Description"
-                  multiline
-                  minRows={5}
-                  required
-                  defaultValue={formData.description}
-                  name="description"
-                  id="description"
-                  variant="outlined"
+            <TextField
+              label="Description"
+              multiline
+              minRows={5}
+              required
+              defaultValue={formData.description}
+              name="description"
+              id="description"
+              variant="outlined"
                   fullWidth
-                  placeholder="Type a descriptive description of your event here"
+              placeholder="Type a descriptive description of your event here"
                 />
-                <TextField
-                  label="Meeting Details"
-                  multiline
-                  minRows={5}
-                  required
-                  defaultValue={formData.meetingDetails}
-                  name="meeting-details"
-                  id="meeting-details"
-                  variant="outlined"
+            <TextField
+              label="Meeting Details"
+              multiline
+              minRows={5}
+              required
+              defaultValue={formData.meetingDetails}
+              name="meeting-details"
+              id="meeting-details"
+              variant="outlined"
                   fullWidth
-                  placeholder="Type a descriptive description of your event here"
+              placeholder="Type a descriptive description of your event here"
                 />
               </Stack>
             </Paper>
@@ -247,12 +247,12 @@ export default function ScheduleEventForm() {
               <Typography variant="h6" gutterBottom>Invitees</Typography>
               <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
                 <List>
-                  {formData.attendees.map((value, index) => (
+                {formData.attendees.map((value, index) => (
                     <ListItem key={index} sx={{ borderBottom: '1px solid #eee' }}>
-                      {value.firstName} {value.lastName} : {value.emailAddress}
-                    </ListItem>
-                  ))}
-                </List>
+                    {value.firstName} {value.lastName} : {value.emailAddress}
+                  </ListItem>
+                ))}
+              </List>
               </Box>
             </Paper>
 
@@ -260,74 +260,74 @@ export default function ScheduleEventForm() {
             <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
               <Typography variant="h6" gutterBottom>Moderators</Typography>
               <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-                <Button
+              <Button
                   variant="contained"
                   onClick={() => dispatch(addMod())}
-                >
+              >
                   Add Moderator
-                </Button>
-                <Button
+              </Button>
+              <Button
                   variant="outlined"
-                  onClick={() => {
-                    if (formData.moderators.length > 1) {
-                      dispatch(removeMod());
-                    }
-                  }}
-                >
+                onClick={() => {
+                  if (formData.moderators.length > 1) {
+                    dispatch(removeMod());
+                  }
+                }}
+              >
                   Remove Moderator
-                </Button>
+              </Button>
               </Stack>
               <Stack spacing={3}>
-                {formData.moderators.map((moderator, index) => (
+              {formData.moderators.map((moderator, index) => (
                   <Stack key={index} direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                    <TextField
-                      label={`Moderator ${index + 1} first name`}
-                      required
-                      value={moderator.firstName}
-                      onChange={(e) =>
-                        dispatch(
-                          updateModeratorFields({
-                            field: "firstName",
-                            value: e.currentTarget.value,
-                            index: index,
-                          })
-                        )
-                      }
+                  <TextField
+                    label={`Moderator ${index + 1} first name`}
+                    required
+                    value={moderator.firstName}
+                    onChange={(e) =>
+                      dispatch(
+                        updateModeratorFields({
+                          field: "firstName",
+                          value: e.currentTarget.value,
+                          index: index,
+                        })
+                      )
+                    }
                       fullWidth
                     />
-                    <TextField
-                      label={`Moderator ${index + 1} last name`}
-                      required
-                      value={moderator.lastName}
-                      onChange={(e) =>
-                        dispatch(
-                          updateModeratorFields({
-                            field: "lastName",
-                            value: e.currentTarget.value,
-                            index: index,
-                          })
-                        )
-                      }
+                  <TextField
+                    label={`Moderator ${index + 1} last name`}
+                    required
+                    value={moderator.lastName}
+                    onChange={(e) =>
+                      dispatch(
+                        updateModeratorFields({
+                          field: "lastName",
+                          value: e.currentTarget.value,
+                          index: index,
+                        })
+                      )
+                    }
                       fullWidth
                     />
-                    <TextField
-                      label={`Moderator ${index + 1} email`}
-                      required
-                      type="email"
-                      value={moderator.emailAddress}
-                      onChange={(e) =>
-                        dispatch(
-                          updateModeratorFields({
-                            field: "emailAddress",
-                            value: e.currentTarget.value,
-                            index: index,
-                          })
-                        )
-                      }
+                  <TextField
+                    label={`Moderator ${index + 1} email`}
+                    required
+                    type="email"
+                    value={moderator.emailAddress}
+                    onChange={(e) =>
+                      dispatch(
+                        updateModeratorFields({
+                          field: "emailAddress",
+                          value: e.currentTarget.value,
+                          index: index,
+                        })
+                      )
+                    }
                       fullWidth
                     />
                   </Stack>
-                ))}
+              ))}
               </Stack>
             </Paper>
           </Stack>

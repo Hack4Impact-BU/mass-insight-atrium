@@ -33,16 +33,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`bg-background text-foreground ${inter.className}`}>
         <StoreProvider>
-          <AppRouterCacheProvider>
-            <ThemeProvider theme={theme}>
+        <AppRouterCacheProvider>
+          <ThemeProvider theme={theme}>
               <AuthProvider>
                 <main className="min-h-screen max-h-screen min-w-full max-w-full">
                   <Navbar />
                   {children}
                 </main>
               </AuthProvider>
-            </ThemeProvider>
-          </AppRouterCacheProvider>
+          </ThemeProvider>
+        </AppRouterCacheProvider>
         </StoreProvider>
       </body>
     </html>

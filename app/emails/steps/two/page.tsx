@@ -1,63 +1,121 @@
 "use client"
-import React from "react";
-import { useState } from "react";
-import Header from "../../components/progress-header";
-import Checkbox from '@mui/material/Checkbox';
-import { useSearchParams, useRouter } from "next/navigation";
-import Buttons from "../../components/nav-buttons";
+import React, { useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Typography, CircularProgress, Alert } from '@mui/material';
+import PeopleSelector from '../../../components/PeopleSelector';
+import Buttons from '../../components/nav-buttons';
+import Header from '../../components/progress-header';
+import { Database } from "@/utils/supabase/types";
 
+type Person = Database["public"]["Tables"]["people"]["Row"] | {
+    id: string | number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    role_profile: string;
+    isManual?: boolean;
+};
 
 const Page: React.FC = () => {
-    const sampleData = ["first_name", "last_name", "id (Student ID)", "email"] // for testing/UI testing
-    const [selectedItems, setSelectedItems] = useState<boolean[]>(new Array(sampleData.length).fill(false));
-    const [dataCheck, setDataCheck] = useState<boolean>(false);
+    const [selectedPeople, setSelectedPeople] = useState<Person[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const searchParams = useSearchParams();
     const router = useRouter();
     const data = searchParams.get("data"); // data taken in from first page "one"
-    
-    const handleToggle = (index: number) => {
-        setSelectedItems((prev) => {
-        const newSelected = [...prev];
-            newSelected[index] = !newSelected[index];
-            for(let i = 0; i < (selectedItems.length); i++){
-                if(selectedItems[i] == true){
-                    setDataCheck(true)
-                }
-            }
-            return newSelected;
-        });
-        //selected items in array of "true/false" values of data to be sent to next page
-    };
 
-    const handleNextPageDataSend = () => {
-        router.push('/email-flow/steps/three');
-       // add data that is to be sent to next page
-       // not sending data need redux or something else for larger data sending
+    const handleNextPageDataSend = async () => {
+        if (selectedPeople.length === 0) {
+            alert("Please select at least one recipient");
+            return;
+        }
+        
+        setLoading(true);
+        setError(null);
+        
+        try {
+            // Ensure all recipients have the correct type
+            const typedRecipients = selectedPeople.map(person => ({
+                ...person,
+                isManual: typeof person.id === 'string' && (
+                    person.id.startsWith('manual_') || 
+                    person.id.startsWith('import_') || 
+                    person.id.startsWith('meeting_')
+                )
+            }));
+
+            // Store selected people in localStorage for next steps
+            localStorage.setItem('selectedRecipients', JSON.stringify(typedRecipients));
+            await router.push('/emails/steps/three');
+        } catch (err) {
+            console.error('Navigation error:', err);
+            setError('Failed to navigate. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     }
 
-return (
-    <div>
-        <Header/>
-        <div className="text-center">
-            <p className="text-4xl font-semibold">Are these the following fields from your data?</p>
-            <p className="text-sm mt-6">Select the fields needed to email your invitees.</p>
-        </div>
-        <div className="grid grid-cols-4 gap-4 mt-10">
-            {sampleData.map((item, index) => (
-                    <div key={index} className="p-4 pb-2.5 pt-2.5 border border-[#006EB6] cursor-pointer flex justify-center items-center">
-                        <Checkbox className="w-8 h-8" value="check" checked={selectedItems[index]} onChange={() => handleToggle(index)} />                        <p className="w-36 ml-4">{item}</p>
-                    </div>
-            ))}
-        </div>
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <Alert severity="error" className="mb-4">
+                    {error}
+                </Alert>
+                <button 
+                    onClick={() => window.location.reload()} 
+                    className="bg-[#006EB6] text-white px-4 py-2 rounded"
+                >
+                    Reload Page
+                </button>
+            </div>
+        );
+    }
 
-        <Buttons
-            buttons={[
-            { label: "Cancel", diffStyle: true, onClick: () => {} },
-            { label: "Previous", onClick: () => {router.push('/email-flow/steps/one');}  },
-            { label: "Next Page", onClick: handleNextPageDataSend, disabled: !dataCheck }
-            ]}
-        />
-    </div>
+    return (
+        <div>
+            <Header/>
+            <div className="text-center">
+                <Typography variant="h4" className="font-bold mb-2">
+                    Select Recipients
+                </Typography>
+                <Typography variant="body1" className="text-gray-600 mb-6">
+                    Choose the people you want to send the email to.
+                </Typography>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 mt-8">
+                <Suspense fallback={<CircularProgress />}>
+                    <PeopleSelector onSelectionChange={setSelectedPeople} />
+                </Suspense>
+                
+                <div className="mt-8">
+                    <Typography variant="body2" color="text.secondary">
+                        {selectedPeople.length} recipients selected
+                    </Typography>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 mt-8">
+                <Buttons
+                    buttons={[
+                        { 
+                            label: "Cancel", 
+                            diffStyle: true, 
+                            onClick: () => router.push('/emails/campaigns') 
+                        },
+                        { 
+                            label: "Previous", 
+                            onClick: () => router.push('/emails/steps/one') 
+                        },
+                        { 
+                            label: "Next Page", 
+                            onClick: handleNextPageDataSend, 
+                            disabled: selectedPeople.length === 0 || loading
+                        }
+                    ]}
+                />
+            </div>
+        </div>
     );
 };
 

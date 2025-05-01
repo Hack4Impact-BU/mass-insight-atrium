@@ -96,7 +96,7 @@ export default function Create() {
                 color: 'primary.main'
               }} 
             />
-            <TextField
+      <TextField
               fullWidth
               variant="outlined"
               placeholder="Search meetings by name or description..."
@@ -211,7 +211,7 @@ export default function Create() {
             >
               Cancel
             </Button>
-            <Button
+      <Button
               variant="contained"
               onClick={handleNext}
               disabled={!selectedMeeting}
@@ -225,10 +225,10 @@ export default function Create() {
                   backgroundColor: 'rgba(25, 118, 210, 0.12)',
                   color: 'rgba(0, 0, 0, 0.26)',
                 },
-              }}
-            >
-              Next
-            </Button>
+        }}
+      >
+        Next
+      </Button>
           </Box>
         </Paper>
       </div>

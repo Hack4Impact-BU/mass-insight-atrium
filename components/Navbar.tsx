@@ -92,6 +92,13 @@ export default function Navbar() {
             </MenuItem>
             <MenuItem
               onClick={() => {
+                handleClose("/emails/campaigns");
+              }}
+            >
+              Email Campaigns
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
                 handleClose("/events/report-attendance/create");
               }}
             >

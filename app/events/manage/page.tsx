@@ -107,8 +107,8 @@ export default function Page() {
       <div className="flex items-center justify-center gap-8 p-8 flex-wrap">
         {meetingData?.map((meeting) => (
           <div key={meeting.meeting_id} className="flex flex-col gap-2">
-            <Button
-              variant="outlined"
+          <Button
+            variant="outlined"
               sx={{ 
                 padding: "1rem",
                 display: "flex",
@@ -120,7 +120,7 @@ export default function Page() {
                 position: "relative"
               }}
               onClick={() => router.push(`/events/view/${meeting.meeting_id}`)}
-            >
+          >
               <div className="flex flex-col w-full">
                 <Typography variant="subtitle1" fontWeight="bold">
                   {meeting.name}
@@ -154,8 +154,8 @@ export default function Page() {
                 >
                   <Delete fontSize="small" />
                 </Button>
-              </div>
-            </Button>
+            </div>
+          </Button>
           </div>
         ))}
 

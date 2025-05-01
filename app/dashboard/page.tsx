@@ -85,7 +85,7 @@ const Page: React.FC = () => {
                 </>
             )}
         </Box>
-    );
+  );
 };
 
 export default Page;

@@ -110,7 +110,7 @@ export default function ImportForm() {
               rowSelection={csvRowSelection}
               setRowSelection={setCsvRowSelection}
             />
-          )}
+      )}
         </div>
 
         <div>
@@ -130,15 +130,15 @@ export default function ImportForm() {
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Button
+        <Button
             variant="contained"
-            onClick={() => {
-              prev();
-              router.push("/events/create/description");
-            }}
-          >
-            Previous
-          </Button>
+          onClick={() => {
+            prev();
+            router.push("/events/create/description");
+          }}
+        >
+          Previous
+        </Button>
 
           <Button
             variant="contained"

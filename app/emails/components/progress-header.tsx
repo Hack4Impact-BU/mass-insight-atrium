@@ -3,11 +3,11 @@ import React from "react";
 import { usePathname } from "next/navigation"; 
 
 const steps = [
-    { index: 1, label: "Import recipients", path: "/email-flow/steps/one" },
-    { index: 2, label: "Confirm data", path: "/email-flow/steps/two" },
-    { index: 3, label: "Create email", path: "/email-flow/steps/three" },
-    { index: 4, label: "Design", path: "/email-flow/steps/four" },
-    { index: 5, label: "Review and send", path: "/email-flow/steps/five" },
+    { index: 1, label: "Import recipients", path: "/emails/steps/one" },
+    { index: 2, label: "Confirm data", path: "/emails/steps/two" },
+    { index: 3, label: "Create email", path: "/emails/steps/three" },
+    { index: 4, label: "Design", path: "/emails/steps/four" },
+    { index: 5, label: "Review and send", path: "/emails/steps/five" },
 ];
 
 const Header: React.FC = () => {

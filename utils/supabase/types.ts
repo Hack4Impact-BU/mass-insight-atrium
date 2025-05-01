@@ -221,6 +221,67 @@ export type Database = {
           },
         ]
       }
+      email_campaigns: {
+        Row: {
+          id: string
+          title: string
+          subject: string
+          body: string
+          footer: string | null
+          created_at: string
+          status: string
+          created_by: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          subject: string
+          body: string
+          footer?: string | null
+          created_at?: string
+          status?: string
+          created_by: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          subject?: string
+          body?: string
+          footer?: string | null
+          created_at?: string
+          status?: string
+          created_by?: string
+        }
+      }
+      email_recipients: {
+        Row: {
+          id: string
+          campaign_id: string
+          person_id: number | null
+          manual_email: string | null
+          sent_at: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          person_id?: number | null
+          manual_email?: string | null
+          sent_at?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          campaign_id?: string
+          person_id?: number | null
+          manual_email?: string | null
+          sent_at?: string | null
+          status?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
