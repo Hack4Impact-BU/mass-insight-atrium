@@ -2,11 +2,12 @@
 
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/types";
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography } from "@mui/material";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, Paper, IconButton, CircularProgress, Box } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Add, Edit, Delete } from "@mui/icons-material";
 import dayjs from "dayjs";
+import { useLoading } from "@/app/providers/LoadingProvider";
 
 const supabase = createClient();
 
@@ -15,6 +16,8 @@ export default function Page() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Database["public"]["Tables"]["meetings"]["Row"] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     description: "",
@@ -24,14 +27,33 @@ export default function Page() {
     location_type: "ONLINE" as "ONLINE" | "INPERSON" | "BOTH"
   });
   const router = useRouter();
+  const { startLoading } = useLoading();
 
   useEffect(() => {
     async function getMeetings() {
-      const { data } = await supabase.from("meetings").select().order("start_time", { ascending: false });
-      setMeetingData(data);
+      setIsLoading(true);
+      try {
+        const { data } = await supabase.from("meetings").select().order("start_time", { ascending: false });
+        setMeetingData(data);
+      } catch (error) {
+        console.error("Error fetching meetings:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
     getMeetings();
   }, []);
+
+  const handleMeetingClick = (meetingId: number) => {
+    startLoading();
+    setIsNavigating(meetingId.toString());
+    router.push(`/events/view/${meetingId}`);
+  };
+
+  const handleCreateClick = () => {
+    startLoading();
+    router.push("/events/create/start");
+  };
 
   const handleEditClick = (meeting: Database["public"]["Tables"]["meetings"]["Row"]) => {
     setSelectedMeeting(meeting);
@@ -107,8 +129,8 @@ export default function Page() {
       <div className="flex items-center justify-center gap-8 p-8 flex-wrap">
         {meetingData?.map((meeting) => (
           <div key={meeting.meeting_id} className="flex flex-col gap-2">
-          <Button
-            variant="outlined"
+            <Paper
+              variant="outlined"
               sx={{ 
                 padding: "1rem",
                 display: "flex",
@@ -117,10 +139,20 @@ export default function Page() {
                 width: "300px",
                 height: "auto",
                 minHeight: "100px",
-                position: "relative"
+                position: "relative",
+                cursor: "pointer",
+                borderColor: "primary.main",
+                backgroundColor: "rgba(25, 118, 210, 0.04)",
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  backgroundColor: "rgba(25, 118, 210, 0.08)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                  borderColor: "primary.dark",
+                }
               }}
-              onClick={() => router.push(`/events/view/${meeting.meeting_id}`)}
-          >
+              onClick={() => handleMeetingClick(meeting.meeting_id)}
+            >
               <div className="flex flex-col w-full">
                 <Typography variant="subtitle1" fontWeight="bold">
                   {meeting.name}
@@ -134,28 +166,26 @@ export default function Page() {
                 </Typography>
               </div>
               <div className="absolute top-2 right-2 flex gap-1">
-                <Button
+                <IconButton
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEditClick(meeting);
                   }}
-                  sx={{ minWidth: "auto", padding: "4px" }}
                 >
                   <Edit fontSize="small" />
-                </Button>
-                <Button
+                </IconButton>
+                <IconButton
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteClick(meeting);
                   }}
-                  sx={{ minWidth: "auto", padding: "4px" }}
                 >
                   <Delete fontSize="small" />
-                </Button>
-            </div>
-          </Button>
+                </IconButton>
+              </div>
+            </Paper>
           </div>
         ))}
 
@@ -167,14 +197,20 @@ export default function Page() {
             flexDirection: "column",
             alignItems: "center",
             width: "300px",
-            height: "100px"
+            height: "100px",
+            borderColor: "primary.main",
+            backgroundColor: "rgba(25, 118, 210, 0.04)",
+            "&:hover": {
+              backgroundColor: "rgba(25, 118, 210, 0.08)",
+              borderColor: "primary.dark",
+            }
           }}
-          onClick={() => router.push("/events/create/start")}
+          onClick={handleCreateClick}
         >
           <div className="flex flex-col items-center">
-            <Add />
-            <hr className="w-full my-2" />
-            Create New Meeting
+            <Add color="primary" />
+            <hr className="w-full my-2 border-primary.light" />
+            <Typography color="primary.main">Create New Meeting</Typography>
           </div>
         </Button>
       </div>

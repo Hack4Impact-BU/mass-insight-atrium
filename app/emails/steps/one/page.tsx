@@ -144,7 +144,7 @@ const Page: React.FC = () => {
     }
   };
 
-  return (
+return (
     <div>
       <Header />
       <div className="text-center">
@@ -176,7 +176,7 @@ const Page: React.FC = () => {
         </div>
         <div className="mt-12 text-[#645F5F] flex justify-center">
           <div className="w-2/3">
-            <p className="text-2xl">NOTICE:</p>
+          <p className="text-2xl">NOTICE:</p>
             <p className="text-xs mt-2 text-center">Please format your invitee list appropriately with distinct data fields so that it may be imported more easily. Be sure to at least include the fields "First Name", "Last Name" and/or "Email".</p>
           </div>
         </div>

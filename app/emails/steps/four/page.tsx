@@ -50,7 +50,7 @@ export default function PreviewPage() {
     }
 
     if (error || !state.campaign || !state.settings || !previewRecipient) {
-        return (
+return (
             <div className="text-center p-8">
                 <Typography variant="h5" color="error">
                     {error || 'Error loading preview. Please go back and try again.'}
@@ -78,7 +78,7 @@ export default function PreviewPage() {
                 <Typography variant="body1" color="textSecondary">
                     This is how your email will look to recipients
                 </Typography>
-            </div>
+                        </div>
             <div className="max-w-3xl mx-auto px-4">
                 <Paper elevation={3} className="p-8" style={{ backgroundColor: state.settings.color === 'black' ? '#000' : '#fff' }}>
                     {state.settings.logoFile && (
@@ -152,6 +152,6 @@ export default function PreviewPage() {
                     />
                 </Box>
             </div>
-        </div>
+    </div>
     );
 }

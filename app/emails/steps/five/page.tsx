@@ -91,8 +91,8 @@ export default function SendPage() {
         );
     }
 
-    return (
-        <div>
+return (
+    <div>
             <Header />
             <div className="text-center mb-8">
                 <Typography variant="h4" gutterBottom>
@@ -101,7 +101,7 @@ export default function SendPage() {
                 <Typography variant="body1" color="textSecondary">
                     Review and send your email
                 </Typography>
-            </div>
+        </div>
             <div className="max-w-3xl mx-auto px-4">
                 <Paper elevation={3} className="p-8">
                     <Box className="mb-6">
@@ -139,8 +139,8 @@ export default function SendPage() {
                         </Alert>
                     )}
                     <Box className="mt-8">
-                        <Buttons
-                            buttons={[
+        <Buttons
+            buttons={[
                                 { 
                                     label: "Cancel", 
                                     diffStyle: true, 
@@ -155,11 +155,11 @@ export default function SendPage() {
                                     onClick: handleSend, 
                                     disabled: sending
                                 }
-                            ]}
-                        />
+            ]}
+        />
                     </Box>
                 </Paper>
             </div>
-        </div>
+    </div>
     );
 }

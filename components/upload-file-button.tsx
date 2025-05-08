@@ -1,126 +1,211 @@
 "use client";
 
-import React from "react";
-import { Button, Typography, Box } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { isValidFileType, isValidFormat } from "@/utils/upload-data/master-data-upload";
-import * as XLSX from "xlsx";
+import React, { useState, useCallback, useRef } from "react";
+import { Button, Typography, Box, CircularProgress, Alert, Snackbar, useTheme, alpha } from "@mui/material";
+import { CloudUpload as CloudUploadIcon, CheckCircle as CheckCircleIcon, Error as ErrorIcon } from "@mui/icons-material";
+import { useAppDispatch } from "@/lib/store";
+import { setRefreshTrigger } from "@/lib/features/masterTableSlice";
+import { useErrorHandler } from "@/lib/hooks/useErrorHandler";
+import { useLoadingState } from "@/lib/hooks/useLoadingState";
 
-const VisuallyHiddenInput = styled("input")({
-  clip: "rect(0 0 0 0)",
-  clipPath: "inset(50%)",
-  height: 1,
-  overflow: "hidden",
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  whiteSpace: "nowrap",
-  width: 1,
-});
+interface UploadFileButtonProps {
+  endpoint: string;
+  acceptedFileTypes?: string;
+  maxFileSize?: number; // in bytes
+  onUploadComplete?: () => void;
+  onUploadError?: (error: Error) => void;
+  buttonText?: string;
+  successMessage?: string;
+  errorMessage?: string;
+}
 
-export type UploadFileButtonProps = {
-  file: File | null;
-  setFile: (file: File | null) => void;
-  setFileData: (data: any[]) => void;
-  addToFileListData: (data: any[]) => void;
-  addToFileList: (data: File) => void;
-};
+const UploadFileButton = ({
+  endpoint,
+  acceptedFileTypes = '.csv,.xlsx,.xls',
+  maxFileSize = 10 * 1024 * 1024, // 10MB default
+  onUploadComplete,
+  onUploadError,
+  buttonText = 'Upload File',
+  successMessage = 'File uploaded successfully',
+  errorMessage = 'Failed to upload file'
+}: UploadFileButtonProps) => {
+  const theme = useTheme();
+  const dispatch = useAppDispatch();
+  const { handleError } = useErrorHandler();
+  const { isLoading, startLoading, stopLoading } = useLoadingState();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
-export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
-  file,
-  setFile,
-  setFileData,
-  addToFileListData,
-  addToFileList
-}) => {
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const uploadedFile = event.target.files?.[0];
-    try {
-      if (!uploadedFile) {
-        throw new Error("No file uploaded.");
-      }
-      const reader = new FileReader();
-      const validExtensions = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"];
-      reader.onload = (e) => {
-        const buffer = e.target?.result;
-        const workbook = XLSX.read(buffer, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        if (!isValidFileType(uploadedFile, validExtensions)) {
-          throw new Error("Invalid file type. Please upload a .csv or .xlsx file.");
-        }
-        // TODO: Add check for required columns, this always returns true
-        if (!isValidFormat(jsonData)) {
-          throw new Error("Invalid file format. Please ensure the file contains the required columns.");
-        }
-        setFile(uploadedFile);
-        setFileData(jsonData);
-        addToFileList(uploadedFile)
-        addToFileListData(jsonData)
-      }
-      reader.readAsArrayBuffer(uploadedFile);
-    } catch (error: any) {
-      setFile(null);
-      setFileData([]);
-      alert(error.message);
+  const validateFile = useCallback((file: File): string | null => {
+    if (!file) return 'No file selected';
+    
+    if (file.size > maxFileSize) {
+      return `File size exceeds ${Math.round(maxFileSize / (1024 * 1024))}MB limit`;
     }
 
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const acceptedExtensions = acceptedFileTypes
+      .split(',')
+      .map(type => type.replace('.', '').toLowerCase());
 
-      // const validExtensions = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
-      // const fileExtension = uploadedFile.type;
-      // console.log(fileExtension);
+    if (!fileExtension || !acceptedExtensions.includes(fileExtension)) {
+      return `File type not supported. Accepted types: ${acceptedFileTypes}`;
+    }
 
-      // if (validExtensions.includes(fileExtension)) {
-      //   setFile(uploadedFile);
+    return null;
+  }, [maxFileSize, acceptedFileTypes]);
 
-      //   // Parse the uploaded file
-      //   const reader = new FileReader();
-      //   reader.readAsArrayBuffer(uploadedFile);
-      //   reader.onload = (e) => {
-      //     const buffer = e.target?.result;
-      //     const workbook = XLSX.read(buffer, { type: "array" });
+  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      //     // Get first sheet and convert to JSON
-      //     const sheetName = workbook.SheetNames[0];
-      //     const worksheet = workbook.Sheets[sheetName];
-      //     const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    const validationError = validateFile(file);
+    if (validationError) {
+      setUploadStatus('error');
+      setStatusMessage(validationError);
+      return;
+    }
 
-      //     setFileData(jsonData);
-      //   };
-      // } else {
-      //   setFile(null);
-      //   setFileData([]);
-      //   alert("Invalid file type. Please upload a .csv or .xlsx file.");
-      // }
-  };
+    try {
+      startLoading();
+      setUploadStatus('idle');
+      setStatusMessage('');
 
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`/api/${endpoint}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setUploadStatus('success');
+      setStatusMessage(successMessage);
+      dispatch(setRefreshTrigger(Date.now()));
+      onUploadComplete?.();
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      setUploadStatus('error');
+      setStatusMessage(error instanceof Error ? error.message : errorMessage);
+      handleError(error);
+      onUploadError?.(error instanceof Error ? error : new Error(errorMessage));
+    } finally {
+      stopLoading();
+    }
+  }, [
+    endpoint,
+    validateFile,
+    startLoading,
+    stopLoading,
+    handleError,
+    onUploadComplete,
+    onUploadError,
+    successMessage,
+    errorMessage,
+    dispatch
+  ]);
+
+  const handleButtonClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleCloseSnackbar = useCallback(() => {
+    setUploadStatus('idle');
+    setStatusMessage('');
+  }, []);
 
   return (
-    <div className="flex flex-col items-center">
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept={acceptedFileTypes}
+        style={{ display: 'none' }}
+      />
+      
       <Button
-        className="border-2 border-gray-400 rounded-lg "
-        variant="outlined"
-        component="label"
+        variant="contained"
+        onClick={handleButtonClick}
+        disabled={isLoading}
+        startIcon={
+          isLoading ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : uploadStatus === 'success' ? (
+            <CheckCircleIcon />
+          ) : uploadStatus === 'error' ? (
+            <ErrorIcon />
+          ) : (
+            <CloudUploadIcon />
+          )
+        }
+        sx={{
+          minWidth: 200,
+          backgroundColor: uploadStatus === 'success' 
+            ? theme.palette.success.main 
+            : uploadStatus === 'error'
+            ? theme.palette.error.main
+            : theme.palette.primary.main,
+          '&:hover': {
+            backgroundColor: uploadStatus === 'success'
+              ? alpha(theme.palette.success.main, 0.9)
+              : uploadStatus === 'error'
+              ? alpha(theme.palette.error.main, 0.9)
+              : alpha(theme.palette.primary.main, 0.9),
+          },
+        }}
       >
-        <Box className="size-100 items-center">
-          <div className="flex flex-col p-10 items-center">
-            <CloudUploadIcon className="w-20 h-20 text-gray-600 mb-4" />
-            <Typography className="normal-case">
-              {file ? file.name : "Import new spreadsheet"}
-            </Typography>
-          </div>
-        </Box>
-
-        <VisuallyHiddenInput
-          type="file"
-          accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          onChange={handleFileChange}
-        />
+        {isLoading ? 'Uploading...' : buttonText}
       </Button>
-    </div>
+
+      {statusMessage && (
+        <Typography
+          variant="body2"
+          color={
+            uploadStatus === 'success'
+              ? 'success.main'
+              : uploadStatus === 'error'
+              ? 'error.main'
+              : 'text.secondary'
+          }
+          sx={{ textAlign: 'center' }}
+        >
+          {statusMessage}
+        </Typography>
+      )}
+
+      <Snackbar
+        open={uploadStatus !== 'idle'}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={uploadStatus === 'success' ? 'success' : 'error'}
+          sx={{ width: '100%' }}
+        >
+          {statusMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
+
+export default UploadFileButton;

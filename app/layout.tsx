@@ -1,20 +1,17 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
-import { ThemeProvider } from "@mui/material/styles";
-import theme from "./theme";
-import StoreProvider from "./StoreProvider";
-import AuthProvider from "./components/AuthProvider";
+import { Suspense, memo } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { ReactNode } from "react";
+import { Viewport } from 'next';
 import Navbar from "../components/Navbar";
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+import { ClientProviders } from "./providers/ClientProviders";
 
 export const metadata = {
-  metadataBase: new URL(defaultUrl),
   title: "Atrium",
   description: "MassInsight Event Management Platform",
+  themeColor: "#ffffff",
 };
 
 const inter = Inter({
@@ -22,28 +19,41 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
+  preload: true,
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+// Memoize the main content to prevent unnecessary re-renders
+const MainContent = memo(({ children }: { children: React.ReactNode }) => (
+  <main className="min-h-screen max-h-screen min-w-full max-w-full">
+    <Navbar />
+    <Suspense fallback={<LoadingSpinner />}>
+      {children}
+    </Suspense>
+  </main>
+));
+
+MainContent.displayName = 'MainContent';
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`bg-background text-foreground ${inter.className}`}>
-        <StoreProvider>
-        <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-              <AuthProvider>
-                <main className="min-h-screen max-h-screen min-w-full max-w-full">
-                  <Navbar />
-                  {children}
-                </main>
-              </AuthProvider>
-          </ThemeProvider>
-        </AppRouterCacheProvider>
-        </StoreProvider>
+        <ErrorBoundary>
+          <ClientProviders>
+            <MainContent>{children}</MainContent>
+          </ClientProviders>
+        </ErrorBoundary>
       </body>
     </html>
   );

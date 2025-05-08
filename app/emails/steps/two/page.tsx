@@ -25,7 +25,7 @@ const Page: React.FC = () => {
     const router = useRouter();
     const { dispatch } = useEmailContext();
     const data = searchParams.get("data"); // data taken in from first page "one"
-
+    
     const handleNextPageDataSend = async () => {
         if (selectedPeople.length === 0) {
             setError("Please select at least one recipient");
@@ -73,17 +73,17 @@ const Page: React.FC = () => {
         );
     }
 
-    return (
-        <div>
-            <Header/>
-            <div className="text-center">
+return (
+    <div>
+        <Header/>
+        <div className="text-center">
                 <Typography variant="h4" className="font-bold mb-2">
                     Select Recipients
                 </Typography>
                 <Typography variant="body1" className="text-gray-600 mb-6">
                     Choose the people you want to send the email to.
                 </Typography>
-            </div>
+        </div>
 
             <div className="max-w-7xl mx-auto px-4 mt-8">
                 <Suspense fallback={<CircularProgress />}>
@@ -94,12 +94,12 @@ const Page: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                         {selectedPeople.length} recipients selected
                     </Typography>
-                </div>
-            </div>
+                    </div>
+        </div>
 
             <div className="max-w-7xl mx-auto px-4 mt-8">
-                <Buttons
-                    buttons={[
+        <Buttons
+            buttons={[
                         { 
                             label: "Cancel", 
                             diffStyle: true, 
@@ -114,10 +114,10 @@ const Page: React.FC = () => {
                             onClick: handleNextPageDataSend, 
                             disabled: selectedPeople.length === 0 || loading
                         }
-                    ]}
-                />
+            ]}
+        />
             </div>
-        </div>
+    </div>
     );
 };
 

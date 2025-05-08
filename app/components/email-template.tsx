@@ -43,7 +43,7 @@ export const EmailTemplate: React.FC<EmailTemplateProps> = ({
           {settings.logoFile && (
             <Section>
               <Img
-                src="https://atrium.massinsight.org/mass-insight-logo.png"
+                src="https://atriummassinsight.s3.us-east-2.amazonaws.com/Massinsightwline.png"
                 alt="Mass Insight Logo"
                 width="200"
                 height="53"
@@ -93,7 +93,7 @@ export const EmailTemplate: React.FC<EmailTemplateProps> = ({
           <Section style={{ marginTop: '32px' }}>
             <Text style={{ fontSize: '12px', color: '#6b7280' }}>
               © {new Date().getFullYear()} Mass Insight. All rights reserved.{' '}
-              <Link href="https://atrium.massinsight.org">atrium.massinsight.org</Link>
+              <Link href="https://massinsight.org">massinsight.org</Link>
             </Text>
           </Section>
         </Container>

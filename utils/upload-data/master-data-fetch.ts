@@ -1,42 +1,63 @@
 import { createClient } from "../supabase/client";
 import dotenv from "dotenv";
+import { cache } from "react";
+
 dotenv.config();
 
 const supabase = createClient();
 
-export const fetchData = async () => {
-  const { data, error } = await supabase.from("people").select("*");
-  if (error) {
-    console.error("Error fetching data:", error);
-    return;
-  }
+// Cache the column keys to avoid recreating the array on every call
+const COLUMN_KEYS = [
+  "id",
+  "first_name",
+  "last_name",
+  "date_of_birth",
+  "email",
+  "role_profile",
+  "race_ethnicity",
+  "state_work",
+  "district_id",
+  "school_id",
+] as const;
 
-  console.log("Data:", data);
-  return data;
-};
+export type ColumnKey = typeof COLUMN_KEYS[number];
 
 export interface ColumnConditions {
   column: number;
   conditions: {
-    name?: string;
+    name?: "contains" | "eq" | "gt" | "lt";
     args: any[];
   }[];
 }
 
-const getColumnKey = (columnIndex: number): string => {
-  const columnKeys = [
-    "id",
-    "first_name",
-    "last_name",
-    "date_of_birth",
-    "email",
-    "role_profile",
-    "race_ethnicity",
-    "state_work",
-    "district_id",
-    "school_id",
-  ];
-  return columnKeys[columnIndex] || ""; // Fallback to empty string if index is out of bounds
+export interface FetchFilteredDataParams {
+  filters?: ColumnConditions[];
+  sortColumn?: string | null;
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+export interface FetchFilteredDataResult {
+  data: any[];
+  totalCount: number;
+  error?: string;
+}
+
+const getColumnKey = (columnIndex: number): ColumnKey | "" => {
+  return COLUMN_KEYS[columnIndex] || "";
+};
+
+// Cache the query results for 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const queryCache = new Map<string, { data: any; timestamp: number }>();
+
+const generateCacheKey = (params: FetchFilteredDataParams): string => {
+  return JSON.stringify(params);
+};
+
+const isCacheValid = (timestamp: number): boolean => {
+  return Date.now() - timestamp < CACHE_DURATION;
 };
 
 export const fetchFilteredData = async ({
@@ -45,59 +66,93 @@ export const fetchFilteredData = async ({
   sortOrder = "asc",
   page = 1,
   pageSize = 10,
-}: {
-  filters?: ColumnConditions[];
-  sortColumn?: string | null;
-  sortOrder?: "asc" | "desc";
-  page?: number;
-  pageSize?: number;
-}) => {
-  // put all the filter into the query itself and then fetch the data
-  // setup all filters before and make one call to the database
-  // filter w/ empty or *
+}: FetchFilteredDataParams): Promise<FetchFilteredDataResult> => {
+  try {
+    // Check cache first
+    const cacheKey = generateCacheKey({ filters, sortColumn, sortOrder, page, pageSize });
+    const cachedResult = queryCache.get(cacheKey);
+    
+    if (cachedResult && isCacheValid(cachedResult.timestamp)) {
+      return cachedResult.data;
+    }
 
-  let query = supabase.from("people").select("*", { count: "exact" }); // Fetch total count
+    let query = supabase.from("people").select("*", { count: "exact" });
 
-  // Apply filters
-  filters.forEach(({ column, conditions }) => {
-    const columnName = getColumnKey(column);
-    console.log("Applying filter on column:", columnName);
-    conditions.forEach(({ name, args }) => {
-      console.log("Filter condition:", { name, args });
-      if (!name || args.length === 0) return;
+    // Apply filters
+    filters.forEach(({ column, conditions }) => {
+      const columnName = getColumnKey(column);
+      if (!columnName) return;
 
-      if (name === "contains") query = query.ilike(columnName, `%${args[0]}%`);
-      if (name === "eq") query = query.eq(columnName, args[0]);
-      if (name === "gt") query = query.gt(columnName, args[0]);
-      if (name === "lt") query = query.lt(columnName, args[0]);
+      conditions.forEach(({ name, args }) => {
+        if (!name || args.length === 0) return;
+
+        switch (name) {
+          case "contains":
+            query = query.ilike(columnName, `%${args[0]}%`);
+            break;
+          case "eq":
+            query = query.eq(columnName, args[0]);
+            break;
+          case "gt":
+            query = query.gt(columnName, args[0]);
+            break;
+          case "lt":
+            query = query.lt(columnName, args[0]);
+            break;
+        }
+      });
     });
-  });
 
-  // Apply sorting FIRST before pagination
-  if (sortColumn !== null) {
-    const columnName = sortColumn;
-    if (columnName) {
-      console.log("Sorting by column:", columnName, "Order:", sortOrder);
-      query = query.order(columnName, { ascending: sortOrder === "asc" });
-    } else {
-      console.warn("Invalid sort column:", sortColumn);
+    // Apply sorting
+    if (sortColumn && COLUMN_KEYS.includes(sortColumn as ColumnKey)) {
+      query = query.order(sortColumn, { ascending: sortOrder === "asc" });
+    }
+
+    // Apply pagination
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to);
+
+    // Execute query
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    const result = {
+      data: data || [],
+      totalCount: count ?? 0,
+    };
+
+    // Cache the result
+    queryCache.set(cacheKey, {
+      data: result,
+      timestamp: Date.now(),
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error in fetchFilteredData:", error);
+    return {
+      data: [],
+      totalCount: 0,
+      error: error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+};
+
+// Clear cache periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of queryCache.entries()) {
+    if (!isCacheValid(value.timestamp)) {
+      queryCache.delete(key);
     }
   }
+}, CACHE_DURATION);
 
-  // Apply pagination AFTER sorting
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-  console.log("Pagination range:", { from, to });
-  query = query.range(from, to);
-
-  // Fetch data
-  const { data, error, count } = await query;
-  console.log("Final query result:", { data, error, count });
-
-  if (error) {
-    console.error("Error fetching data:", error);
-    return { data: [], totalCount: 0 };
-  }
-
-  return { data, totalCount: count ?? 0 };
+// Export a function to manually clear the cache if needed
+export const clearQueryCache = () => {
+  queryCache.clear();
 };
