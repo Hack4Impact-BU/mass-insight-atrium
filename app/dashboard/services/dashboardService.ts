@@ -245,9 +245,9 @@ export class DashboardService {
         const participationByDistrict: Record<string, number> = {};
         const participationByState: Record<string, number> = {};
         const participationByRole: Record<string, number> = {};
-        const participationByContentArea: Record<string, string> = {};
+        const participationByContentArea: Record<string, number> = {};
         const participationByGrade: Record<number, number> = {};
-        const participationByCourse: Record<string, string> = {};
+        const participationByCourse: Record<string, number> = {};
         const participationByRace: Record<string, number> = {};
 
         console.log('Starting participation metrics calculation');
@@ -255,6 +255,18 @@ export class DashboardService {
         let participatedCount = 0;
         let matchedWithPersonCount = 0;
         let matchedWithSchoolCount = 0;
+
+        // Helper function to parse and increment counts for comma-separated values
+        const incrementMultiValue = (value: string | null, record: Record<string, number>) => {
+            if (value) {
+                value.split(',')
+                    .map(v => v.trim())
+                    .filter(v => v)
+                    .forEach(v => {
+                        record[v] = (record[v] || 0) + 1;
+                    });
+            }
+        };
 
         invitees.forEach(inv => {
             if (inv.status === "PARTICIPATED") {
@@ -291,10 +303,8 @@ export class DashboardService {
                         participationByRole[person.role_profile] = (participationByRole[person.role_profile] || 0) + 1;
                     }
 
-                    // Content area participation (store as comma-separated string)
-                    if (person.content_area) {
-                        participationByContentArea[person.email] = person.content_area;
-                    }
+                    // Content area participation (split and count each area)
+                    incrementMultiValue(person.content_area, participationByContentArea);
 
                     // Grade level participation
                     if (person.sy2024_25_grade_level !== null) {
@@ -302,10 +312,8 @@ export class DashboardService {
                             (participationByGrade[person.sy2024_25_grade_level] || 0) + 1;
                     }
 
-                    // Course participation (store as comma-separated string)
-                    if (person.sy2024_25_course) {
-                        participationByCourse[person.email] = person.sy2024_25_course;
-                    }
+                    // Course participation (split and count each course)
+                    incrementMultiValue(person.sy2024_25_course, participationByCourse);
 
                     // Race/Ethnicity participation
                     if (person.race_ethnicity) {

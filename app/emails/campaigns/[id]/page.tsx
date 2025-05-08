@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Database } from '@/utils/supabase/types';
-import { Paper, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, CircularProgress } from '@mui/material';
+import { Paper, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, CircularProgress, Button, Skeleton } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/progress-header';
 
@@ -18,62 +18,53 @@ type PageParams = {
   id: string;
 };
 
+const StatusChip: React.FC<{ status: string }> = ({ status }) => {
+  const color =
+    status === 'sent' ? 'success' :
+    status === 'failed' ? 'error' :
+    status === 'pending' ? 'warning' : 'default';
+  return <Chip label={status} color={color as any} size="small" aria-label={`Status: ${status}`} />;
+};
+
 export default function CampaignDetailsPage({ params }: { params: PageParams }) {
   const router = useRouter();
-  const { id: campaignId } = React.use(params);
+  const campaignId = params.id;
   const [campaign, setCampaign] = useState<EmailCampaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchCampaign = async () => {
       try {
         const supabase = createClient();
         const { data, error } = await supabase
           .from('email_campaigns')
-          .select(`
-            *,
-            email_recipients (
-              id,
-              status,
-              sent_at,
-              person:people(*),
-              manual_email
-            )
-          `)
+          .select(`*, email_recipients (id, status, sent_at, person:people(*), manual_email)`)
           .eq('id', campaignId)
           .single();
-
         if (error) throw error;
-        setCampaign(data);
+        if (isMounted) setCampaign(data);
       } catch (err) {
         console.error('Error fetching campaign:', err);
-        setError('Failed to load campaign details');
+        if (isMounted) setError('Failed to load campaign details');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-
     fetchCampaign();
+    return () => { isMounted = false; };
   }, [campaignId]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'sent':
-        return 'success';
-      case 'failed':
-        return 'error';
-      case 'pending':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <CircularProgress />
+        <Box width="100%" maxWidth={900}>
+          <Skeleton variant="rectangular" height={60} sx={{ mb: 2 }} />
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} variant="rectangular" height={40} sx={{ mb: 1 }} />
+          ))}
+        </Box>
       </div>
     );
   }
@@ -82,6 +73,7 @@ export default function CampaignDetailsPage({ params }: { params: PageParams }) 
     return (
       <div className="text-center p-8">
         <Typography color="error">{error || 'Campaign not found'}</Typography>
+        <Button onClick={() => router.push('/emails/campaigns')} color="primary" sx={{ mt: 2 }}>Back to Campaigns</Button>
       </div>
     );
   }
@@ -89,20 +81,20 @@ export default function CampaignDetailsPage({ params }: { params: PageParams }) 
   return (
     <div>
       <Header />
-      
       <div className="max-w-7xl mx-auto px-4 mt-8">
         <div className="flex justify-between items-center mb-6">
           <Typography variant="h4" gutterBottom>
             Campaign Details
           </Typography>
-          <button
+          <Button
             onClick={() => router.push('/emails/campaigns')}
-            className="bg-[#006EB6] text-white px-4 py-2 rounded hover:bg-[#005a9c]"
+            variant="contained"
+            color="primary"
+            aria-label="Back to Campaigns"
           >
             Back to Campaigns
-          </button>
+          </Button>
         </div>
-
         <Paper className="p-6 mb-6">
           <Typography variant="h6" gutterBottom>Campaign Information</Typography>
           <Box className="grid grid-cols-2 gap-4">
@@ -116,11 +108,7 @@ export default function CampaignDetailsPage({ params }: { params: PageParams }) 
             </div>
             <div>
               <Typography variant="subtitle2" color="textSecondary">Status</Typography>
-              <Chip 
-                label={campaign.status} 
-                color={getStatusColor(campaign.status) as any}
-                size="small"
-              />
+              <StatusChip status={campaign.status} />
             </div>
             <div>
               <Typography variant="subtitle2" color="textSecondary">Created At</Typography>
@@ -128,11 +116,10 @@ export default function CampaignDetailsPage({ params }: { params: PageParams }) 
             </div>
           </Box>
         </Paper>
-
         <Paper className="p-6">
           <Typography variant="h6" gutterBottom>Recipients</Typography>
           <TableContainer>
-            <Table>
+            <Table aria-label="Recipients Table">
               <TableHead>
                 <TableRow>
                   <TableCell>Recipient</TableCell>
@@ -143,7 +130,7 @@ export default function CampaignDetailsPage({ params }: { params: PageParams }) 
               </TableHead>
               <TableBody>
                 {campaign.email_recipients.map((recipient) => (
-                  <TableRow key={recipient.id}>
+                  <TableRow key={recipient.id} tabIndex={0} aria-label={`Recipient ${recipient.id}`}> 
                     <TableCell>
                       {recipient.person ? 
                         `${recipient.person.first_name} ${recipient.person.last_name}` :
@@ -154,11 +141,7 @@ export default function CampaignDetailsPage({ params }: { params: PageParams }) 
                       {recipient.person?.email || recipient.manual_email}
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={recipient.status} 
-                        color={getStatusColor(recipient.status) as any}
-                        size="small"
-                      />
+                      <StatusChip status={recipient.status} />
                     </TableCell>
                     <TableCell>
                       {recipient.sent_at ? new Date(recipient.sent_at).toLocaleString() : '-'}

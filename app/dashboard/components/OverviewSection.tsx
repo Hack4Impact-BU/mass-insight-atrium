@@ -20,8 +20,6 @@ interface OverviewSectionProps {
 }
 
 export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTimeRangeChange, selectedTimeFilter, onSelectedChange }) => {
-    if (!overview) return null;
-
     const [isExporting, setIsExporting] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
     const [pieChartView, setPieChartView] = useState<ViewType>('school');
@@ -29,13 +27,14 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
     const dashboardService = new DashboardService();
 
     const downloadDetailedData = async () => {
+        if (!overview?.timeRange) {
+            setExportError('No time range selected');
+            return;
+        }
+
         setIsExporting(true);
         setExportError(null);
         try {
-            if (!overview?.timeRange) {
-                throw new Error('No time range selected');
-            }
-
             const detailedData = await dashboardService.fetchDetailedAttendanceData(overview.timeRange);
             
             if (detailedData.length === 0) {
@@ -73,11 +72,6 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
             data[key] = (data[key] || 0) + 1;
         };
 
-        // Helper function to parse comma-separated values
-        const parseMultiValue = (value: string) => {
-            return value.split(',').map(v => v.trim()).filter(v => v);
-        };
-
         // Process data based on view type
         switch (pieChartView) {
             case 'school':
@@ -101,10 +95,8 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
                 });
                 break;
             case 'content':
-                // Parse content areas (comma-separated)
                 Object.entries(overview.participationByContentArea).forEach(([key, value]) => {
-                    const contentAreas = parseMultiValue(value);
-                    contentAreas.forEach(area => incrementCount(area));
+                    data[key] = value;
                 });
                 break;
             case 'grade':
@@ -113,10 +105,8 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
                 });
                 break;
             case 'course':
-                // Parse courses (comma-separated)
                 Object.entries(overview.participationByCourse).forEach(([key, value]) => {
-                    const courses = parseMultiValue(value);
-                    courses.forEach(course => incrementCount(course));
+                    data[key] = value;
                 });
                 break;
             case 'race':
@@ -137,6 +127,8 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ overview, onTi
     const gaugeValue = overview && overview.totalRegistrations > 0 
         ? (overview.attendeeAttendance / overview.totalRegistrations) * 100 
         : 0;
+
+    if (!overview) return null;
 
     return (
         <Box sx={{ mb: 4 }}>

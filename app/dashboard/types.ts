@@ -8,9 +8,9 @@ export type OverviewType = {
     participationByDistrict: Record<string, number>;
     participationByState: Record<string, number>;
     participationByRole: Record<string, number>;
-    participationByContentArea: Record<string, string>;
+    participationByContentArea: Record<string, number>;
     participationByGrade: Record<number, number>;
-    participationByCourse: Record<string, string>;
+    participationByCourse: Record<string, number>;
     participationByRace: Record<string, number>;
     attendanceOverTime: Array<{
         date: string;

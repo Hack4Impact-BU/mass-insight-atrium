@@ -6,6 +6,7 @@ import PeopleSelector from '../../../components/PeopleSelector';
 import Buttons from '../../components/nav-buttons';
 import Header from '../../components/progress-header';
 import { Database } from "@/utils/supabase/types";
+import { useEmailContext } from '../../context';
 
 type Person = Database["public"]["Tables"]["people"]["Row"] | {
     id: string | number;
@@ -22,30 +23,31 @@ const Page: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { dispatch } = useEmailContext();
     const data = searchParams.get("data"); // data taken in from first page "one"
 
     const handleNextPageDataSend = async () => {
         if (selectedPeople.length === 0) {
-            alert("Please select at least one recipient");
+            setError("Please select at least one recipient");
             return;
         }
-        
         setLoading(true);
         setError(null);
-        
         try {
-            // Ensure all recipients have the correct type
-            const typedRecipients = selectedPeople.map(person => ({
-                ...person,
-                isManual: typeof person.id === 'string' && (
-                    person.id.startsWith('manual_') || 
-                    person.id.startsWith('import_') || 
-                    person.id.startsWith('meeting_')
-                )
-            }));
-
-            // Store selected people in localStorage for next steps
-            localStorage.setItem('selectedRecipients', JSON.stringify(typedRecipients));
+            // Ensure all recipients have the correct type and email is string
+            const typedRecipients = selectedPeople
+                .filter(person => !!person.email)
+                .map(person => ({
+                    ...person,
+                    email: String(person.email),
+                    role_profile: person.role_profile ? String(person.role_profile) : '',
+                    isManual: typeof person.id === 'string' && (
+                        person.id.startsWith('manual_') || 
+                        person.id.startsWith('import_') || 
+                        person.id.startsWith('meeting_')
+                    )
+                }));
+            dispatch({ type: 'SET_RECIPIENTS', payload: typedRecipients });
             await router.push('/emails/steps/three');
         } catch (err) {
             console.error('Navigation error:', err);
@@ -53,7 +55,7 @@ const Page: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     if (error) {
         return (

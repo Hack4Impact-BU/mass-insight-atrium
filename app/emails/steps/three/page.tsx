@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import Modal from "../../components/recip-modal";
 import { createClient } from '@/utils/supabase/client';
 import { Database } from '@/utils/supabase/types';
+import { useEmailContext } from '../../context';
 
 type EmailCampaign = Database['public']['Tables']['email_campaigns']['Insert'];
 
@@ -30,9 +31,8 @@ const Page: React.FC = () => {
     const router = useRouter();
     const [loading, setLoading] = React.useState(false);
     const [modal, setModal] = useState(false);
-    const [selectedRecipients, setSelectedRecipients] = useState<Recipient[]>([]);
-    
-    // Form state
+    const [error, setError] = useState<string | null>(null);
+    const { state, dispatch } = useEmailContext();
     const [formData, setFormData] = React.useState<Partial<EmailCampaign> & {
         customFields: boolean;
         confirmationCode: boolean;
@@ -58,22 +58,12 @@ const Page: React.FC = () => {
         additionalEmail: ''
     });
 
+    // On mount, load recipients from context
     useEffect(() => {
-        const recipients = localStorage.getItem('selectedRecipients');
-        if (recipients) {
-            const parsedRecipients = JSON.parse(recipients);
-            console.log('Recipients loaded from localStorage:', parsedRecipients);
-            setSelectedRecipients(parsedRecipients);
+        if (!state.recipients || state.recipients.length === 0) {
+            router.push('/emails/steps/one');
         }
-    }, []);
-
-    // Update localStorage whenever selectedRecipients changes
-    useEffect(() => {
-        if (selectedRecipients.length > 0) {
-            console.log('Updating localStorage with recipients:', selectedRecipients);
-            localStorage.setItem('selectedRecipients', JSON.stringify(selectedRecipients));
-        }
-    }, [selectedRecipients]);
+    }, [state.recipients, router]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -99,129 +89,76 @@ const Page: React.FC = () => {
     };
 
     const handleSave = async () => {
-        if (!formData.title || !formData.subject || !formData.body || selectedRecipients.length === 0) {
-            alert("Please fill out all required fields and select recipients.");
+        if (!formData.title || !formData.subject || !formData.body || state.recipients.length === 0) {
+            setError("Please fill out all required fields and select recipients.");
             return;
         }
-
         setLoading(true);
+        setError(null);
         try {
             const supabase = createClient();
-            
-            // First create the email campaign
-            console.log('Creating email campaign with data:', {
-                title: formData.title,
-                subject: formData.subject,
-                body: formData.body,
-                footer: formData.footer,
-                status: 'draft'
-            });
-
+            // Create the email campaign
             const { data: campaignData, error: campaignError } = await supabase
                 .from('email_campaigns')
                 .insert({
                     title: formData.title,
                     subject: formData.subject,
                     body: formData.body,
-                    footer: formData.footer,
+                    footer: formData.footer ?? '',
                     status: 'draft',
                     created_by: (await supabase.auth.getUser()).data.user?.id
                 })
                 .select()
                 .single();
-
             if (campaignError) {
-                console.error('Error creating campaign:', campaignError);
+                setError('Error creating campaign: ' + campaignError.message);
                 throw campaignError;
             }
-
             if (!campaignData || !campaignData.id) {
+                setError('Failed to create campaign: No ID returned');
                 throw new Error('Failed to create campaign: No ID returned');
             }
-
-            console.log('Campaign created successfully:', campaignData);
-
-            // Then create the email recipients
-            if (selectedRecipients.length > 0) {
-                console.log('Processing recipients:', selectedRecipients);
-                
-                // Process recipients one at a time to better handle errors
-                for (const person of selectedRecipients) {
-                    try {
-                        // Log the exact recipient we're processing
-                        console.log('Processing recipient:', {
-                            id: person.id,
-                            typeofId: typeof person.id,
-                            isString: typeof person.id === 'string',
-                            isNumber: typeof person.id === 'number',
-                            idValue: person.id,
-                            person: person
-                        });
-
-                        // Check if this is a manual recipient (has a temporary ID)
-                        const isManualRecipient = person.isManual || (
-                            typeof person.id === 'string' && (
-                                person.id.startsWith('manual_') || 
-                                person.id.startsWith('import_') || 
-                                person.id.startsWith('meeting_')
-                            )
-                        );
-                        
-                        // Log whether we think this is a manual recipient
-                        console.log('Is manual recipient?', isManualRecipient);
-
-                        // For database recipients, the ID might be a number or a string representation of a number
-                        const isDbRecipient = !isManualRecipient && (
-                            typeof person.id === 'number' || 
-                            (typeof person.id === 'string' && !isNaN(Number(person.id)))
-                        );
-                        
-                        // For database recipients (from step 2), use person_id
-                        // For manual recipients (added in step 3), use manual_email
-                        const recipientData = {
-                            campaign_id: campaignData.id,
-                            person_id: isDbRecipient ? Number(person.id) : null,
-                            manual_email: isManualRecipient ? person.email : null,
-                            status: 'pending'
-                        };
-                        
-                        console.log('Attempting to insert recipient:', recipientData);
-
-                        const { error: recipientError } = await supabase
-                            .from('email_recipients')
-                            .insert(recipientData);
-
-                        if (recipientError) {
-                            console.error('Error inserting recipient:', recipientError);
-                            throw recipientError;
-                        }
-
-                        console.log('Recipient inserted successfully');
-                    } catch (error) {
-                        console.error('Error processing recipient:', person, error);
-                        throw error;
+            // Insert recipients
+            for (const person of state.recipients) {
+                try {
+                    const recipientData = {
+                        campaign_id: campaignData.id,
+                        manual_email: person.email,
+                        status: 'pending'
+                    };
+                    const { error: recipientError } = await supabase
+                        .from('email_recipients')
+                        .insert(recipientData);
+                    if (recipientError) {
+                        setError('Error inserting recipient: ' + recipientError.message);
+                        throw recipientError;
                     }
+                } catch (error: any) {
+                    setError('Error processing recipient: ' + (error.message || 'Unknown error'));
+                    throw error;
                 }
             }
-
-            // Store additional settings in localStorage for the preview page
-            const settings = {
+            // Store campaign and settings in context for next steps
+            dispatch({ type: 'SET_CAMPAIGN', payload: {
+                id: campaignData.id,
+                title: formData.title,
+                subject: formData.subject,
+                body: formData.body,
+                footer: formData.footer ?? '',
+                status: 'draft'
+            }});
+            dispatch({ type: 'SET_SETTINGS', payload: {
                 customFields: formData.customFields,
                 confirmationCode: formData.confirmationCode,
                 replyTo: formData.replyTo,
                 reminderOne: formData.reminderOne,
                 reminderTwo: formData.reminderTwo,
                 color: formData.color,
-                logoFile: formData.logoFile ? formData.logoFile.name : null
-            };
-
-            console.log('Storing settings in localStorage:', settings);
-            localStorage.setItem('emailSettings', JSON.stringify(settings));
-
+                logoFile: formData.logoFile
+            }});
             router.push('/emails/steps/four');
-        } catch (error) {
-            console.error('Error saving email campaign:', error);
-            alert(`Failed to save email campaign: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } catch (error: any) {
+            setError(error.message || 'Failed to save email campaign.');
         } finally {
             setLoading(false);
         }
@@ -229,10 +166,9 @@ const Page: React.FC = () => {
 
     const handleAddManualRecipient = () => {
         if (!formData.additionalEmail || !formData.additionalEmail.includes('@')) {
-            alert('Please enter a valid email address');
+            setError('Please enter a valid email address');
             return;
         }
-
         const newRecipient: Recipient = {
             id: `manual_${Date.now()}`,
             email: formData.additionalEmail.trim(),
@@ -241,36 +177,29 @@ const Page: React.FC = () => {
             role_profile: 'Additional Recipient',
             isManual: true
         };
-
-        console.log('Adding manual recipient:', newRecipient);
-        setSelectedRecipients(prev => {
-            const updated = [...prev, newRecipient];
-            // Update localStorage immediately to ensure it's saved
-            localStorage.setItem('selectedRecipients', JSON.stringify(updated));
-            return updated;
-        });
+        dispatch({ type: 'ADD_RECIPIENT', payload: newRecipient });
         setFormData(prev => ({ ...prev, additionalEmail: '' }));
     };
 
-return (
-    <div>
-        <Header/>
-        <div className="text-center">
-            <p className="text-4xl font-semibold">Email your invitees</p>
+    return (
+        <div>
+            <Header/>
+            <div className="text-center">
+                <p className="text-4xl font-semibold">Email your invitees</p>
                 <p className="text-sm mt-6">You'll be able to customize the design of your email in the next step.</p>
-        </div>
+            </div>
 
-        <div className="flex justify-center mt-10">
-            <div className="border border-[#006EB6] p-4 pb-2.5 pt-2.5 flex justify-center items-center">
+            <div className="flex justify-center mt-10">
+                <div className="border border-[#006EB6] p-4 pb-2.5 pt-2.5 flex justify-center items-center">
                     <Checkbox 
                         className="w-8 h-8" 
                         checked={formData.customFields}
                         onChange={() => handleCheckboxChange('customFields')}
                     />
                     <p className="text-sm ml-4">Include replies to custom fields in email confirmation</p>
-            </div>
+                </div>
 
-            <div className="border border-[#006EB6] p-4 pb-2.5 pt-2.5 flex justify-center items-center ml-16">
+                <div className="border border-[#006EB6] p-4 pb-2.5 pt-2.5 flex justify-center items-center ml-16">
                     <Checkbox 
                         className="w-8 h-8" 
                         checked={formData.confirmationCode}
@@ -278,9 +207,9 @@ return (
                     />
                     <p className="text-sm ml-4">Include a confirmation code</p>
                 </div>
-        </div>
+            </div>
 
-        <div className="mt-10">
+            <div className="mt-10">
                 <p className="font-medium">Auto Reminders</p>
                 <div className="flex items-center mt-3">
                     <p className="text-sm">Send guests a reminder in advance of start</p>
@@ -350,43 +279,43 @@ return (
                         </div>
                     </div>
                 </div>
-        </div>
+            </div>
 
-        <div className="mt-10">
-            <Accordion>
-            <AccordionSummary expandIcon={<ArrowDownwardIcon />}>
-                <Typography component="span">Edit email content</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <div className="flex items-center mt-4">
-                    <p className="text-sm font-medium w-20">Title:</p>
+            <div className="mt-10">
+                <Accordion>
+                    <AccordionSummary expandIcon={<ArrowDownwardIcon />}>
+                        <Typography component="span">Edit email content</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <div className="flex items-center mt-4">
+                            <p className="text-sm font-medium w-20">Title:</p>
                             <input 
                                 className="w-3/4 h-10 border border-[#929292] p-3"
                                 name="title"
                                 value={formData.title}
                                 onChange={handleInputChange}
                             />
-                </div>
-                <div className="flex items-center mt-8">
-                    <p className="text-sm font-medium w-20">Subject:</p>
+                        </div>
+                        <div className="flex items-center mt-8">
+                            <p className="text-sm font-medium w-20">Subject:</p>
                             <input 
                                 className="w-3/4 h-10 border border-[#929292] p-3"
                                 name="subject"
                                 value={formData.subject}
                                 onChange={handleInputChange}
                             />
-                </div>
-                <div className="flex items-center mt-8">
-                    <p className="text-sm font-medium w-20">Body:</p>
+                        </div>
+                        <div className="flex items-center mt-8">
+                            <p className="text-sm font-medium w-20">Body:</p>
                             <textarea 
                                 className="w-3/4 border border-[#929292] p-3 h-24"
                                 name="body"
                                 value={formData.body}
                                 onChange={handleInputChange}
                             />
-                </div>
-                <div className="flex items-center mt-8">
-                    <p className="text-sm font-medium w-20">Footer:</p>
+                        </div>
+                        <div className="flex items-center mt-8">
+                            <p className="text-sm font-medium w-20">Footer:</p>
                             <textarea 
                                 className="w-3/4 border border-[#929292] p-3 h-24"
                                 name="footer"
@@ -418,7 +347,7 @@ return (
                                 >
                                     Add
                                 </button>
-                </div>
+                            </div>
                         </div>
 
                         <Modal isOpen={modal} onClose={() => setModal(false)}>
@@ -426,8 +355,8 @@ return (
                             <p className="mt-2 text-sm">The following people will receive this email:</p>
                             <hr className="mt-4" />
                             <div className="overflow-auto h-96">
-                                <p className="text-sm mt-4 m-2">Recipients selected: {selectedRecipients.length}</p>
-                                {selectedRecipients.map((person, index) => (
+                                <p className="text-sm mt-4 m-2">Recipients selected: {state.recipients.length}</p>
+                                {state.recipients.map((person, index) => (
                                     <div key={index} className="m-2 p-4 pb-2.5 pt-2.5 border border-[#006EB6] flex justify-between items-center">
                                         <div>
                                             <p className="font-medium">{person.first_name} {person.last_name}</p>
@@ -436,17 +365,17 @@ return (
                                         <div className="text-sm text-gray-600">
                                             {person.role_profile}
                                         </div>
-                        </div>
-                        ))}
-                    </div>
-                </Modal>
-            </AccordionDetails>
-            </Accordion>
-</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Modal>
+                    </AccordionDetails>
+                </Accordion>
+            </div>
 
             <div className="max-w-7xl mx-auto px-4 mt-8">
-    <Buttons
-        buttons={[
+                <Buttons
+                    buttons={[
                         { 
                             label: "Cancel", 
                             diffStyle: true, 
@@ -459,12 +388,12 @@ return (
                         { 
                             label: "Next", 
                             onClick: handleSave,
-                            disabled: !formData.title || !formData.subject || !formData.body || loading || selectedRecipients.length === 0
+                            disabled: !formData.title || !formData.subject || !formData.body || loading || state.recipients.length === 0
                         }
                     ]}
                 />
             </div>
-    </div>
+        </div>
     );
 };
 
