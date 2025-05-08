@@ -34,7 +34,7 @@ export default function Page() {
       | undefined
   ): any[] => {
     if (inviteeData !== undefined && inviteeData.length > 0) {
-      let columns: {
+      const columns: {
         header: string;
         accessorKey: string;
         filterVariant: string;

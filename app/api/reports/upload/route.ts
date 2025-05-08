@@ -30,8 +30,8 @@ export async function POST(request: Request) {
         if (schoolError) throw schoolError;
 
         // 3. Upsert person (hybrid: by id, then by email)
-        let person = null;
-        let personError = null;
+        const person = null;
+        const personError = null;
         // Try by id
         if (row.id) {
           const { data, error } = await supabase.from('people').select('*').eq('id', row.id).single();

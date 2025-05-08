@@ -1,15 +1,21 @@
 "use client"
-import React from "react";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
 
 // Email dashboard will be the first and last page of sending an email
 
-const Page: React.FC = () => {
+const EmailDashboardContent = dynamic(
+  () => import("./EmailDashboardContent"),
+  {
+    ssr: false,
+    loading: () => <div>Loading...</div>
+  }
+);
 
-return (
-    <div>
-        <p>Email dashboard</p>
-    </div>
-    );
-};
-
-export default Page;
+export default function EmailDashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EmailDashboardContent />
+    </Suspense>
+  );
+}

@@ -37,12 +37,12 @@ export const RedirectManager = ({ children }: { children: ReactNode }) => {
   // console.log(`pageNum = ${pageNum}, currentPathname = $`);
   const next = useCallback(() => {
     setPageNum((pageNum) => pageNum + 1);
-  }, [pageNum]);
+  }, []);
   const prev = useCallback(() => {
     if (pageNum > 0) {
       setPageNum((pageNum) => pageNum - 1);
     }
-  }, [pageNum ]);
+  }, [pageNum]);
 
   const progressRedirect = (buttonType: "prev-button" | "next-button") => {
     if (buttonType == "prev-button") {

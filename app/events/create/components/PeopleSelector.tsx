@@ -124,51 +124,89 @@ export default function PeopleSelector({ onSelectionChange, initialSelectedPeopl
 
   // Update selected people based on filters and table selection
   useEffect(() => {
-    const hasActiveFilters = 
-      selectedSchools.length > 0 ||
-      selectedDistricts.length > 0 ||
-      selectedStates.length > 0 ||
-      selectedRoles.length > 0 ||
-      selectedContentAreas.length > 0 ||
-      selectedGradeLevels.length > 0;
-
-    // Only apply filtering if there are active filters
-    const filteredPeople = hasActiveFilters ? people.filter((person) => {
-      const matchesSchool = selectedSchools.length === 0 || (person.school_id && selectedSchools.includes(person.school_id));
-      const matchesDistrict = selectedDistricts.length === 0 || (person.district_id && selectedDistricts.includes(person.district_id));
-      const matchesState = selectedStates.length === 0 || (person.state_work && selectedStates.includes(person.state_work));
-      const matchesRole = selectedRoles.length === 0 || (person.role_profile && selectedRoles.includes(person.role_profile));
-      const matchesContentArea = selectedContentAreas.length === 0 || 
-        (person.content_area && selectedContentAreas.some(area => 
-          person.content_area?.split(',').map(a => a.trim()).includes(area)
-        ));
-      const matchesGradeLevel = selectedGradeLevels.length === 0 || 
-        (person.sy2024_25_grade_level && selectedGradeLevels.includes(person.sy2024_25_grade_level));
-
-      return matchesSchool && matchesDistrict && matchesState && matchesRole && matchesContentArea && matchesGradeLevel;
-    }) : [];
-
-    // Get people selected from the table
-    const selectedFromTable = people.filter((person) => tableRowSelection[person.id]);
-    
-    // Remove duplicates based on email using Map
     const uniquePeople = new Map<string, Person>();
     
-    // Add filtered people first (only if there are active filters)
-    if (hasActiveFilters) {
-      filteredPeople.forEach(person => {
+    // Add people from selected schools
+    if (selectedSchools.length > 0) {
+      const schoolPeople = people.filter(person => 
+        selectedSchools.includes(person.school_id || -1)
+      );
+      schoolPeople.forEach(person => {
         if (person.email) {
           uniquePeople.set(person.email, person);
         }
       });
     }
     
-    // Add table-selected people
-    selectedFromTable.forEach(person => {
-      if (person.email) {
-        uniquePeople.set(person.email, person);
-      }
-    });
+    // Add people from selected districts
+    if (selectedDistricts.length > 0) {
+      const districtPeople = people.filter(person => 
+        selectedDistricts.includes(person.district_id || -1)
+      );
+      districtPeople.forEach(person => {
+        if (person.email) {
+          uniquePeople.set(person.email, person);
+        }
+      });
+    }
+    
+    // Add people from selected states
+    if (selectedStates.length > 0) {
+      const statePeople = people.filter(person => 
+        selectedStates.includes(person.state_work || '')
+      );
+      statePeople.forEach(person => {
+        if (person.email) {
+          uniquePeople.set(person.email, person);
+        }
+      });
+    }
+    
+    // Add people from selected roles
+    if (selectedRoles.length > 0) {
+      const rolePeople = people.filter(person => 
+        selectedRoles.includes(person.role_profile || '')
+      );
+      rolePeople.forEach(person => {
+        if (person.email) {
+          uniquePeople.set(person.email, person);
+        }
+      });
+    }
+    
+    // Add people from selected content areas
+    if (selectedContentAreas.length > 0) {
+      const contentAreaPeople = people.filter(person => 
+        selectedContentAreas.includes(person.content_area || '')
+      );
+      contentAreaPeople.forEach(person => {
+        if (person.email) {
+          uniquePeople.set(person.email, person);
+        }
+      });
+    }
+    
+    // Add people from selected grade levels
+    if (selectedGradeLevels.length > 0) {
+      const gradeLevelPeople = people.filter(person => 
+        selectedGradeLevels.includes(person.sy2024_25_grade_level || '')
+      );
+      gradeLevelPeople.forEach(person => {
+        if (person.email) {
+          uniquePeople.set(person.email, person);
+        }
+      });
+    }
+    
+    // Add people from table selection
+    if (Object.keys(tableRowSelection).length > 0) {
+      const selectedFromTable = people.filter((person) => tableRowSelection[person.id]);
+      selectedFromTable.forEach(person => {
+        if (person.email) {
+          uniquePeople.set(person.email, person);
+        }
+      });
+    }
     
     const combinedPeople = Array.from(uniquePeople.values());
     
@@ -183,6 +221,7 @@ export default function PeopleSelector({ onSelectionChange, initialSelectedPeopl
     selectedGradeLevels,
     tableRowSelection,
     people,
+    onSelectionChange
   ]);
 
   // Handle initial selected people separately
@@ -204,7 +243,7 @@ export default function PeopleSelector({ onSelectionChange, initialSelectedPeopl
         return newSelection;
       });
     }
-  }, [initialSelectedPeople]);
+  }, [initialSelectedPeople, onSelectionChange]);
 
   const columns: MRT_ColumnDef<Person>[] = [
     {

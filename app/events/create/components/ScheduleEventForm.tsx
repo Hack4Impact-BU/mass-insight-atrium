@@ -36,6 +36,8 @@ import { useActionState, useEffect, useState } from "react";
 import { scheduleFormAction } from "../../actions";
 import { steps } from "../../utils";
 import { useProgressContext } from "../RedirectManager";
+import { PersonSchema } from "@/lib/features/eventCreateForm/eventCreateFormSlice";
+import { z } from "zod";
 
 export default function ScheduleEventForm() {
   const router = useRouter();
@@ -247,7 +249,7 @@ export default function ScheduleEventForm() {
               <Typography variant="h6" gutterBottom>Invitees</Typography>
               <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
                 <List>
-                {formData.attendees.map((value, index) => (
+                {formData.attendees.map((value: z.infer<typeof PersonSchema>, index: number) => (
                     <ListItem key={index} sx={{ borderBottom: '1px solid #eee' }}>
                     {value.firstName} {value.lastName} : {value.emailAddress}
                   </ListItem>
@@ -278,7 +280,7 @@ export default function ScheduleEventForm() {
               </Button>
               </Stack>
               <Stack spacing={3}>
-              {formData.moderators.map((moderator, index) => (
+              {formData.moderators.map((moderator: z.infer<typeof PersonSchema>, index: number) => (
                   <Stack key={index} direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
                     label={`Moderator ${index + 1} first name`}

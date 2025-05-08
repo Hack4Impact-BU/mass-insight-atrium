@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { z } from "zod";
 
 // Validation schema for attendee/moderator
-const PersonSchema = z.object({
+export const PersonSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   emailAddress: z.string().email("Invalid email address"),

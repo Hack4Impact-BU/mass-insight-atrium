@@ -1,4 +1,4 @@
-import { TimeFilterOption } from './types';
+import { TimeFilterOption, DetailedAttendanceData } from './types';
 
 export const downloadAsCSV = (data: DetailedAttendanceData[], filename: string) => {
     const start = new Date();
@@ -17,7 +17,7 @@ export const downloadAsCSV = (data: DetailedAttendanceData[], filename: string) 
 
 export const getTimeRangeFromOption = (option: TimeFilterOption, customRange?: { start: Date; end: Date }) => {
     const end = new Date();
-    let start = new Date();
+    const start = new Date();
 
     switch (option) {
         case '7days':

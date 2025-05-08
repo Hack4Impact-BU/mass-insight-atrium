@@ -64,11 +64,11 @@ export const UploadFileButton: React.FC<UploadFileButtonProps> = ({
         comments: 'Meeting ID',
       });
       if (result.errors.length) {
-        var msg = result.errors[0].message;        
+        const msg = result.errors[0].message;        
         throw new Error(msg);
       }
 
-      const parsedData = result.data as Object[];
+      const parsedData = result.data as object[];
       const columns = Object.keys(parsedData[0]);
 
       if (!COLUMNS.every((col) => columns.includes(col))) {

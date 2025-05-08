@@ -117,17 +117,6 @@ const Navbar = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState<{ [key: string]: HTMLElement | null }>({});
 
-  const handleMenuClick = useCallback((event: React.MouseEvent<HTMLButtonElement>, item: NavItem) => {
-    if (item.subItems) {
-      setMenuAnchorEl(prev => ({
-        ...prev,
-        [item.label]: event.currentTarget
-      }));
-    } else {
-      handleNavigation(item.path);
-    }
-  }, []);
-
   const handleNavigation = useCallback(async (path: string) => {
     try {
       setLoading(path);
@@ -138,6 +127,17 @@ const Navbar = () => {
       setLoading(null);
     }
   }, [router]);
+
+  const handleMenuClick = useCallback((event: React.MouseEvent<HTMLButtonElement>, item: NavItem) => {
+    if (item.subItems) {
+      setMenuAnchorEl(prev => ({
+        ...prev,
+        [item.label]: event.currentTarget
+      }));
+    } else {
+      handleNavigation(item.path);
+    }
+  }, [handleNavigation]);
 
   const handleClose = useCallback((path: string) => {
     if (path) {

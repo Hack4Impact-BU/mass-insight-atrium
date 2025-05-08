@@ -211,7 +211,7 @@ const MasterTable = ({
 
   // Handle sort change
   const handleSortChange = useCallback((model: GridSortModel) => {
-    dispatch(setSort(model));
+    dispatch(setSort([...model]));
   }, [dispatch]);
 
   // Handle pagination change

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { Provider } from "react-redux";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -18,15 +18,17 @@ export function ClientProviders({ children }: { children: ReactNode }) {
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <LoadingProvider>
-          <StoreProvider>
-            <AppRouterCacheProvider>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
-            </AppRouterCacheProvider>
-          </StoreProvider>
-        </LoadingProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <LoadingProvider>
+            <StoreProvider>
+              <AppRouterCacheProvider>
+                <AuthProvider>
+                  {children}
+                </AuthProvider>
+              </AppRouterCacheProvider>
+            </StoreProvider>
+          </LoadingProvider>
+        </Suspense>
       </ThemeProvider>
     </Provider>
   );

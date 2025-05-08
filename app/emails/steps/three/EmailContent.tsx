@@ -1,5 +1,6 @@
-"use client"
-import React, { useEffect, useState, Suspense } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Header from "../../components/progress-header";
 import Checkbox from '@mui/material/Checkbox';
 import MenuItem from '@mui/material/MenuItem';
@@ -15,7 +16,6 @@ import Modal from "../../components/recip-modal";
 import { createClient } from '@/utils/supabase/client';
 import { Database } from '@/utils/supabase/types';
 import { useEmailContext } from '../../context';
-import dynamic from "next/dynamic";
 
 type EmailCampaign = Database['public']['Tables']['email_campaigns']['Insert'];
 
@@ -28,15 +28,7 @@ interface Recipient {
     isManual?: boolean;
 }
 
-const EmailContent = dynamic(
-    () => import("./EmailContent"),
-    {
-        ssr: false,
-        loading: () => <div>Loading...</div>
-    }
-);
-
-const Page: React.FC = () => {
+export default function EmailContent() {
     const router = useRouter();
     const [loading, setLoading] = React.useState(false);
     const [modal, setModal] = useState(false);
@@ -226,7 +218,7 @@ const Page: React.FC = () => {
                         <Select 
                             className="h-10 w-32"
                             name="reminderOne"
-                            value={formData.reminderOne}
+                            value={formData.reminderOne || ''}
                             onChange={handleSelectChange}
                         >
                             <MenuItem value="24">24 hours</MenuItem>
@@ -240,7 +232,7 @@ const Page: React.FC = () => {
                         <Select 
                             className="h-10 w-32"
                             name="reminderTwo"
-                            value={formData.reminderTwo}
+                            value={formData.reminderTwo || ''}
                             onChange={handleSelectChange}
                         >
                             <MenuItem value="24">24 hours</MenuItem>
@@ -259,157 +251,98 @@ const Page: React.FC = () => {
                             name="replyTo"
                             value={formData.replyTo}
                             onChange={handleInputChange}
+                            placeholder="Enter reply-to email"
                         />
                     </div>
-                    <div className="w-1/5">
-                        <p className="text-sm font-medium">Color</p>
-                        <div className="flex mt-2">
-                            <button 
-                                className="w-10 h-10 bg-[#fff] border border-[#006EB6]" 
-                                onClick={() => setFormData(prev => ({ ...prev, color: 'white' }))}
-                            />
-                            <button 
-                                className="w-10 h-10 bg-[#000] ml-2" 
-                                onClick={() => setFormData(prev => ({ ...prev, color: 'black' }))}
-                            />
-                        </div>
+                </div>
+
+                <div className="flex justify-center items-center mt-10">
+                    <div className="w-3/5">
+                        <p className="text-sm font-medium">Email Title</p>
+                        <input 
+                            className="w-3/4 h-10 border border-[#929292] mt-2 pl-3 pr-3"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleInputChange}
+                            placeholder="Enter email title"
+                        />
                     </div>
-                    <div className="w-1/5">
-                        <p className="text-sm font-medium">Logo</p>
-                        <div className="flex mt-2">
-                            <Checkbox 
-                                checked={formData.logoFile !== null}
-                                onChange={() => setFormData(prev => ({
-                                    ...prev,
-                                    logoFile: prev.logoFile ? null : new File([], 'mass-insight-logo.png')
-                                }))}
+                </div>
+
+                <div className="flex justify-center items-center mt-10">
+                    <div className="w-3/5">
+                        <p className="text-sm font-medium">Email Subject</p>
+                        <input 
+                            className="w-3/4 h-10 border border-[#929292] mt-2 pl-3 pr-3"
+                            name="subject"
+                            value={formData.subject}
+                            onChange={handleInputChange}
+                            placeholder="Enter email subject"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex justify-center items-center mt-10">
+                    <div className="w-3/5">
+                        <p className="text-sm font-medium">Email Body</p>
+                        <textarea 
+                            className="w-3/4 h-40 border border-[#929292] mt-2 pl-3 pr-3 pt-2"
+                            name="body"
+                            value={formData.body}
+                            onChange={handleInputChange}
+                            placeholder="Enter email body"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex justify-center items-center mt-10">
+                    <div className="w-3/5">
+                        <p className="text-sm font-medium">Email Footer</p>
+                        <textarea 
+                            className="w-3/4 h-20 border border-[#929292] mt-2 pl-3 pr-3 pt-2"
+                            name="footer"
+                            value={formData.footer || ''}
+                            onChange={handleInputChange}
+                            placeholder="Enter email footer"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex justify-center items-center mt-10">
+                    <div className="w-3/5">
+                        <p className="text-sm font-medium">Additional Recipients</p>
+                        <div className="flex items-center mt-2">
+                            <input 
+                                className="w-3/4 h-10 border border-[#929292] pl-3 pr-3"
+                                name="additionalEmail"
+                                value={formData.additionalEmail}
+                                onChange={handleInputChange}
+                                placeholder="Enter additional email"
                             />
-                            <p className="text-sm ml-2">Include Mass Insight logo</p>
+                            <button 
+                                className="ml-4 px-4 py-2 bg-[#006EB6] text-white rounded"
+                                onClick={handleAddManualRecipient}
+                            >
+                                Add
+                            </button>
                         </div>
                     </div>
                 </div>
+
+                {error && (
+                    <div className="mt-4 text-red-500 text-center">
+                        {error}
+                    </div>
+                )}
             </div>
 
-            <div className="mt-10">
-                <Accordion>
-                    <AccordionSummary expandIcon={<ArrowDownwardIcon />}>
-                        <Typography component="span">Edit email content</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        <div className="flex items-center mt-4">
-                            <p className="text-sm font-medium w-20">Title:</p>
-                            <input 
-                                className="w-3/4 h-10 border border-[#929292] p-3"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                        <div className="flex items-center mt-8">
-                            <p className="text-sm font-medium w-20">Subject:</p>
-                            <input 
-                                className="w-3/4 h-10 border border-[#929292] p-3"
-                                name="subject"
-                                value={formData.subject}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                        <div className="flex items-center mt-8">
-                            <p className="text-sm font-medium w-20">Body:</p>
-                            <textarea 
-                                className="w-3/4 border border-[#929292] p-3 h-24"
-                                name="body"
-                                value={formData.body}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                        <div className="flex items-center mt-8">
-                            <p className="text-sm font-medium w-20">Footer:</p>
-                            <textarea 
-                                className="w-3/4 border border-[#929292] p-3 h-24"
-                                name="footer"
-                                value={formData.footer || ''}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                        <button 
-                            className="mt-6 mb-6 h-10 w-36 border border-[#006EB6] text-sm text-[#006EB6]"
-                            onClick={() => setModal(true)}
-                        >
-                            View selected recipients
-                        </button>
-
-                        <div className="mt-4">
-                            <p className="text-sm font-medium mb-2">Additional Recipients</p>
-                            <div className="flex gap-2">
-                                <input
-                                    type="email"
-                                    placeholder="Enter email address"
-                                    className="flex-1 h-10 border border-[#929292] p-3"
-                                    value={formData.additionalEmail || ''}
-                                    name="additionalEmail"
-                                    onChange={handleInputChange}
-                                />
-                                <button
-                                    className="px-4 h-10 border border-[#006EB6] text-sm text-[#006EB6]"
-                                    onClick={handleAddManualRecipient}
-                                >
-                                    Add
-                                </button>
-                            </div>
-                        </div>
-
-                        <Modal isOpen={modal} onClose={() => setModal(false)}>
-                            <h2 className="text-lg font-medium">Selected Recipients</h2>
-                            <p className="mt-2 text-sm">The following people will receive this email:</p>
-                            <hr className="mt-4" />
-                            <div className="overflow-auto h-96">
-                                <p className="text-sm mt-4 m-2">Recipients selected: {state.recipients.length}</p>
-                                {state.recipients.map((person, index) => (
-                                    <div key={index} className="m-2 p-4 pb-2.5 pt-2.5 border border-[#006EB6] flex justify-between items-center">
-                                        <div>
-                                            <p className="font-medium">{person.first_name} {person.last_name}</p>
-                                            <p className="text-sm text-gray-600">{person.email}</p>
-                                        </div>
-                                        <div className="text-sm text-gray-600">
-                                            {person.role_profile}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </Modal>
-                    </AccordionDetails>
-                </Accordion>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 mt-8">
-                <Buttons
-                    buttons={[
-                        { 
-                            label: "Cancel", 
-                            diffStyle: true, 
-                            onClick: () => router.push('/emails/campaigns') 
-                        },
-                        { 
-                            label: "Previous", 
-                            onClick: () => router.push('/emails/steps/two') 
-                        },
-                        { 
-                            label: "Next", 
-                            onClick: handleSave,
-                            disabled: !formData.title || !formData.subject || !formData.body || loading || state.recipients.length === 0
-                        }
-                    ]}
-                />
-            </div>
+            <Buttons
+                buttons={[
+                    { label: "Cancel", diffStyle: true, onClick: () => {} },
+                    { label: "Previous", onClick: () => router.push('/emails/steps/two') },
+                    { label: "Next Page", onClick: handleSave, disabled: loading }
+                ]}
+            />
         </div>
     );
-};
-
-export default function EmailPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <EmailContent />
-        </Suspense>
-    );
-}
+} 

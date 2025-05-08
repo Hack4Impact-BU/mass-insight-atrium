@@ -4,15 +4,17 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Updated props: now includes URL searchParams
-export default async function ResetPassword(props: {
-  searchParams: { [key: string]: string | undefined };
-}) {
-  const searchParams = props.searchParams;
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}
 
+export default async function ResetPassword({ searchParams }: PageProps) {
+  // Await the searchParams
+  const params = await searchParams;
+  
   // Check if valid access_token and type=recovery exist
-  const accessToken = searchParams["access_token"];
-  const type = searchParams["type"];
+  const accessToken = params["access_token"];
+  const type = params["type"];
 
   const isValid = accessToken && type === "recovery";
 
@@ -51,7 +53,7 @@ export default async function ResetPassword(props: {
       <SubmitButton formAction={resetPasswordAction}>
         Reset password
       </SubmitButton>
-      <FormMessage message={searchParams as Message} />
+      <FormMessage message={params as Message} />
     </form>
   );
 }

@@ -2,7 +2,23 @@
 "use client";
 
 import { Typography, Button } from "@mui/material";
-import PeopleTable from "@/components/master-table";
+import MasterTable from "@/components/master-table";
+import { GridColDef } from "@mui/x-data-grid";
+
+// Define the columns for the people table
+const columns: GridColDef[] = [
+  { field: 'id', headerName: 'ID', width: 90 },
+  { field: 'first_name', headerName: 'First Name', width: 130 },
+  { field: 'last_name', headerName: 'Last Name', width: 130 },
+  { field: 'email', headerName: 'Email', width: 200 },
+  { field: 'phone', headerName: 'Phone', width: 130 },
+  { field: 'created_at', headerName: 'Created At', width: 180, 
+    valueFormatter: ({ value }) => 
+      value ? new Date(value as string).toLocaleString() : '' },
+  { field: 'updated_at', headerName: 'Updated At', width: 180,
+    valueFormatter: ({ value }) => 
+      value ? new Date(value as string).toLocaleString() : '' }
+];
 
 export default function ViewData() {
   return (
@@ -18,7 +34,11 @@ export default function ViewData() {
 
             {/* Spreadsheet Section */}
             <div className="w-full max-w-7xl py-5">
-              <PeopleTable />
+              <MasterTable 
+                endpoint="people"
+                columns={columns}
+                title="People"
+              />
               {/* Navigation Buttons */}
               <div className="flex justify-between w-full mt-5">
                 <Button className="text-blue-600" variant="outlined">
